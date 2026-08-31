@@ -115,6 +115,21 @@ the browser smoke test skips itself when no Chromium is installed.
 
 ## Documents
 
+For users:
+
+- [`docs/configuration.md`](./docs/configuration.md) — every option of
+  `createBridge` and `connect`, with defaults and costs.
+- [`docs/troubleshooting.md`](./docs/troubleshooting.md) — every error an
+  application can see, what it means, what to do.
+- [`docs/choosing-an-adapter.md`](./docs/choosing-an-adapter.md) — birpc vs
+  oRPC vs tRPC vs staying raw.
+- [`docs/non-loopback.md`](./docs/non-loopback.md) — what leaving `127.0.0.1`
+  costs, and the sane ways to do it.
+
+For contributors and auditors:
+
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — the spec-first rule, checks,
+  release flow.
 - [`PROTOCOL.md`](./PROTOCOL.md) — normative wire protocol (RFC-style).
 - [`THREAT-MODEL.md`](./THREAT-MODEL.md) — normative threat model.
 - [`SECURITY.md`](./SECURITY.md) — how to report a vulnerability, and the
