@@ -813,6 +813,7 @@ effective value, not their own preference.
 | `reconnectMaxMs` | 10 000 | backoff ceiling | client |
 | `maxFlowViolations` | 8 | stream-level flow errors before connection teardown | mux |
 | `launchTokenTtlMs` | 120 000 | validity window of the one-time launch token | server |
+| `sessionCookieTtlMs` | 28 800 000 (8 h) | validity window of a minted session cookie, distinct from `sessionTtlMs` (`THREAT-MODEL.md` §7.2) | server |
 | `authFailureWindowMs` | 60 000 | rate-limit window for authentication failures | server |
 | `authFailuresPerWindow` | 20 | authentication failures per window per remote address before `429` | server |
 | `maxHeaderBytes` | 16 KiB | HTTP request header budget | server |

@@ -77,6 +77,12 @@ const host = new SessionHost({
 const endpoint = await host.accept(carrier);
 ```
 
+A handler that fails *after* the `OPEN` was acknowledged says so with
+`stream.error(code, message)`: it sends a stream-level `ERROR` and tears down
+that stream only, leaving the connection and its other streams alone.
+`stream.cancel(reason)` is the different case — abandoning work, not reporting
+a fault.
+
 ## Resume
 
 An endpoint outlives its carrier. When a connection dies the endpoint moves to

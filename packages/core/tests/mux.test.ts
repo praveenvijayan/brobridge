@@ -457,6 +457,51 @@ describe('cancellation', () => {
   });
 });
 
+describe('stream-level failure', () => {
+  it('reports a fault raised after the OPEN was acknowledged', async () => {
+    let served!: BridgeStream;
+    const { client } = await connectPair({
+      onStream: (stream) => {
+        served = stream;
+      },
+    });
+
+    const stream = client.openStream('work');
+    await flush();
+    // The responder accepted the stream and only then discovered it could not
+    // serve it (`PROTOCOL.md` §10): an ERROR, not a cancellation.
+    served.error(ErrorCode.PERMISSION_DENIED, 'not for you');
+    await flush();
+
+    expect(served.state).toBe('closed');
+    expect(stream.state).toBe('closed');
+    expect(stream.failure?.code).toBe(ErrorCode.PERMISSION_DENIED);
+    expect(stream.failure?.message).toBe('not for you');
+    // Only the stream died; the connection is untouched.
+    expect(client.state).toBe('open');
+    await expect(client.ping()).resolves.toBeGreaterThanOrEqual(0);
+  });
+
+  it('is inert once the stream has already closed', async () => {
+    let served!: BridgeStream;
+    const { client } = await connectPair({
+      onStream: (stream) => {
+        served = stream;
+      },
+    });
+
+    const stream = client.openStream('work');
+    await flush();
+    await served.end();
+    await flush();
+    stream.cancel();
+    await flush();
+
+    served.error(ErrorCode.INTERNAL_ERROR, 'too late');
+    expect(client.state).toBe('open');
+  });
+});
+
 describe('keepalive and shutdown', () => {
   it('answers PING with a PONG echoing the nonce', async () => {
     const { client } = await connectPair();

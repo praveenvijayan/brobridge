@@ -460,6 +460,24 @@ Refusal is `403` with an empty body and no detail about which check failed.
 The verdict type distinguishes the failing check internally for tests and
 diagnostics, and that detail never reaches the wire.
 
+### 6.1 What each runtime can show the fence
+
+The fence is one function, but the two backends can feed it different amounts
+of evidence, and the difference is worth stating rather than assuming away:
+
+| Evidence | Node | Bun |
+| --- | --- | --- |
+| Raw request-line form (check 1) | Yes — `req.url` keeps the absolute form, and `CONNECT` is refused on its own event | No — `Bun.serve` hands a Fetch `Request` whose URL is already absolute, so the origin form is reconstructed |
+| Duplicate `Host` (check 2) | Yes — raw headers preserve both, and Node's own parser rejects most cases first | Partly — `Headers` joins duplicates into `a, b`, which the fence refuses as a multi-valued `Host` |
+| Every other check | Yes | Yes |
+
+Nothing in that table is a hole: a duplicated or rebound `Host` fails the
+byte-exact authority comparison whichever spelling reaches it, and no request
+of any form reaches a route without a credential. It does mean the
+absolute-form refusal is a Node-side defence in depth rather than a
+cross-runtime guarantee, and a change to Bun's request handling should be
+re-checked against this table.
+
 ---
 
 ## 7. Authentication, precisely
@@ -490,9 +508,17 @@ authority || "\0" || issuedAt))>`.
 
 Verification: parse into exactly three parts; recompute the MAC over the
 presented `sessionId`, the server's **own** bound authority and the presented
-`issuedAt`; compare in constant time; then check `issuedAt` is within the
-session TTL and that the session still exists. Any failure is treated as "no
-credential" — same status, same body, same timing class.
+`issuedAt`; compare in constant time; then check `issuedAt` is within
+`sessionCookieTtlMs` and that the server still recognises the session. Any
+failure is treated as "no credential" — same status, same body, same timing
+class.
+
+`sessionCookieTtlMs` (default 8 hours) is **not** `sessionTtlMs`
+(`PROTOCOL.md` §13, default 60 s). The latter is how long a *protocol*
+session's replay state survives a disconnect; the former is how long the tab
+stays authenticated. A tab that idles for ten minutes must still be able to
+reconnect — it simply cannot resume its streams. Conflating the two would
+expire the credential of every idle tab a minute after it went quiet.
 
 Binding the authority into the MAC is what makes a cookie planted by a
 different loopback port (§5.8) inert here.

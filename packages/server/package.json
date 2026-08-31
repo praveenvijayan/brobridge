@@ -37,7 +37,8 @@
   },
   "scripts": {
     "build": "tsc -b",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:bun": "bun test tests-bun"
   },
   "keywords": [
     "brobridge",
@@ -49,6 +50,10 @@
     "node"
   ],
   "dependencies": {
-    "@brobridge/core": "workspace:^"
+    "@brobridge/core": "workspace:^",
+    "ws": "^8.21.3"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.1"
   }
 }

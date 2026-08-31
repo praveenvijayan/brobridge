@@ -434,6 +434,30 @@ export class BridgeStream implements AsyncIterable<Uint8Array> {
     );
   }
 
+  /**
+   * Fail the stream with a stream-level `ERROR`.
+   *
+   * `PROTOCOL.md` §10 lets a responder answer a call with an `ERROR` instead
+   * of a response payload, and a route handler that fails *after* it returned
+   * needs a way to say so. `cancel()` cannot: it carries no code, and a
+   * cancellation is not a fault.
+   *
+   * The connection is unaffected — only this stream ends.
+   *
+   * @see PROTOCOL.md §5.7, §10
+   */
+  error(code: ErrorCode, message: string): void {
+    if (this.#state === 'closed' || this.#state === 'reaped') return;
+    this.#host.sendStreamFrame({
+      type: FrameType.ERROR,
+      streamId: this.id,
+      seq: 0,
+      flags: FrameFlags.NONE,
+      payload: { code, message },
+    });
+    this.#fail(new StreamError(code, message, { streamId: this.id }));
+  }
+
   /* ---------------------------------------------------------------------- */
   /*  Internals driven by the endpoint                                       */
   /* ---------------------------------------------------------------------- */
