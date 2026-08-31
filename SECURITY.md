@@ -4,7 +4,7 @@
 
 Report privately. Do **not** open a public issue for a vulnerability.
 
-- **GitHub:** open a [private security advisory](https://github.com/brobridge/brobridge/security/advisories/new)
+- **GitHub:** open a [private security advisory](https://github.com/praveenvijayan/brobridge/security/advisories/new)
   on the repository. This is the preferred route — it gives us a private fork
   to fix in and a coordinated disclosure timeline.
 - **Email:** `security@brobridge.dev`, if you would rather not use GitHub.

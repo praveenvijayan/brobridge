@@ -5,14 +5,14 @@
   "description": "brobridge protocol core: frame codec, stream multiplexing, credit flow control, resume",
   "license": "MIT",
   "author": "brobridge contributors",
-  "homepage": "https://github.com/brobridge/brobridge#readme",
+  "homepage": "https://github.com/praveenvijayan/brobridge#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/brobridge/brobridge.git",
+    "url": "git+https://github.com/praveenvijayan/brobridge.git",
     "directory": "packages/core"
   },
   "bugs": {
-    "url": "https://github.com/brobridge/brobridge/issues"
+    "url": "https://github.com/praveenvijayan/brobridge/issues"
   },
   "sideEffects": false,
   "engines": {
