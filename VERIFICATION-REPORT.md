@@ -12,7 +12,7 @@ Audited at commit `643260d` (`feat(adapters)`), on macOS 15 / arm64.
 | --- | --- |
 | 1. Spec conformance | **Pass**, after 2 fixes and 13 new tests |
 | 2. Security re-test | **Pass**, after 1 fix and 7 new tests |
-| 3. Cross-runtime matrix | **Pass** on Node 22, Node 24, Bun 1.4. Node 20 **not run** — see §3 |
+| 3. Cross-runtime matrix | **Pass** on Node 20, Node 22, Node 24, Bun 1.4 — see §3 |
 | 4. Performance | **3 of 4 targets met.** Isolation holds; its p99 figure misses at the default window — see §4.2 |
 | 5. API / DX | **Pass**, after 2 README fixes and a new check |
 | 6. Release readiness | **Pass** |
@@ -337,15 +337,41 @@ here rather than rounded to "zero".
 | Node 24.15.0 | full (`pnpm test`) | **24 files, 321 tests, all pass** |
 | Bun 1.4.0 | `packages/server/tests-bun` | **5 pass, 0 fail** |
 | Bun 1.4.0 | `packages/client/tests-bun` | **4 pass, 0 fail** |
-| Node 20 | — | **not run** |
+| Node 20.20.2 | full (vitest) | **24 files, 320 pass, 1 skipped** |
 
-**Node 20 was not verified.** The audit machine has Node 22 and Node 24 and no
-version manager to install another, and on the operator's direction the matrix
-ran Node 22 + 24 + Bun instead of downloading a toolchain. Node 20 is the
-declared `engines` floor for all four packages, so **it should be added to CI
-before release**; nothing found in this audit is version-specific, and no API
-newer than Node 20 is used (`crypto.subtle`, `WebSocket` via `ws`,
-`structuredClone`-free), but that is an argument, not a test result.
+### Node 20 — closed in Phase 7
+
+This section originally recorded Node 20, the declared `engines` floor, as
+**not run**. It has now been run, on Node 20.20.2, and it is a cell in CI. Three
+things had to be fixed first, and the first of them is the reason the floor is
+easy to get wrong:
+
+1. **pnpm 11 does not start on Node 20.** It requires `node:sqlite`, which
+   arrives in Node 22 — `pnpm build` on Node 20 dies with
+   `ERR_UNKNOWN_BUILTIN_MODULE: No such built-in module: node:sqlite`. This
+   says nothing about brobridge and everything about the toolchain, so both
+   the local run and the CI job install and build on Node 22 and then run
+   vitest with Node 20. The distinction is now written down: `.nvmrc` is the
+   development toolchain (22), `engines` is what the published packages
+   support (>= 20), and `scripts/check-engines.mjs` keeps them from drifting.
+
+2. **`packages/client/tests/options.test.ts` assumed a global `WebSocket`.**
+   Node 20 has no such global (it lands in Node 22), so `resolveOptions({})`
+   threw before the defaults could be asserted. The suite now installs its own
+   stub globals rather than borrowing whatever the host runtime has — the
+   assertions are unchanged, and the last case still deletes them to check the
+   diagnostics.
+
+3. **`packages/client/tests/browser.test.ts` spawned the demo with
+   `--experimental-strip-types`**, which needs Node >= 22.6. On Node 20 the
+   child exited immediately and the suite failed after a 30-second start-up
+   timeout. It now checks the runtime first and skips with that as the reason,
+   the same way it already skipped when no Chromium was installed. The skipped
+   test in the table above is this one; it runs on Node 22 and 24, where the
+   count is the full 321.
+
+The result: **320 pass, 1 skipped on Node 20**, and no product code needed
+changing — the argument in the original text held, but it is now a test result.
 
 The browser half is covered inside the Node runs: `client/tests/browser.test.ts`
 drives the demo page in real Chromium through Playwright — call, stream, and a
@@ -521,6 +547,8 @@ along with the packages table, and the release/verification commands added.
 | `npm publish --dry-run` | **clean for all four** (`node scripts/check-publish.mjs`) |
 | Root README quickstart | present, both halves compile against the tarballs (§5.3) |
 | `SECURITY.md` | **added** — reporting route, response times, supported versions, the threat model in one page, and what is explicitly *not* defended |
+| CI / release automation | **added in Phase 7** — `.github/workflows/ci.yml` (test matrix 20/22/24, Bun, quality, advisory bench smoke) and `.github/workflows/release.yml` (changesets → Version Packages PR → provenance publish) |
+| Repository metadata | **corrected in Phase 7** — `repository.url` on all four packages pointed at `github.com/brobridge/brobridge`, which is not the repository that builds them; npm provenance refuses that mismatch |
 
 ```
 $ node scripts/check-publish.mjs
@@ -544,13 +572,13 @@ asked for. `check-publish.mjs` fails if they ever drift.
 | --- | --- |
 | Report complete with evidence for all six sections | yes |
 | Zero open MUSTs | yes — every `PROTOCOL.md` MUST is implemented and, with the two exceptions named in §1.3, tested |
-| All suites green on the matrix | yes — 321 tests on Node 22 and Node 24; 9 Bun tests |
+| All suites green on the matrix | yes — 321 tests on Node 22 and Node 24, 320 + 1 skipped on Node 20; 9 Bun tests |
 
 ### What remains unverified, and why
 
-1. **Node 20 was not run** (§3). The declared `engines` floor. No toolchain on
-   the audit machine and, by the operator's decision, no download. Add it to CI
-   before publishing.
+1. ~~**Node 20 was not run**~~ — **closed in Phase 7** (§3). Run on Node
+   20.20.2: 320 pass, 1 skipped, after three test/toolchain fixes recorded
+   there. It is now a cell in `.github/workflows/ci.yml`.
 2. **Two MUSTs are verified by inspection, not by test** (§1.3): `GOAWAY`
    on stream-id exhaustion and stream-level `SEQ_EXHAUSTED`. Both need ~2³¹
    operations to reach; the counters beneath them are tested.

@@ -1,0 +1,191 @@
+# The gate every change passes before it lands.
+#
+# One thing here is not the obvious shape. Dependencies are installed and the
+# workspace is built on the *toolchain* Node from .nvmrc, and only the test run
+# switches to the matrix version. pnpm 11 requires `node:sqlite` and will not
+# start on Node 20 at all, so a job that ran `pnpm install` on Node 20 could not
+# report anything about Node 20. What the matrix is asking is whether the
+# product runs on the floor it declares in `engines`, and running vitest with
+# that Node answers exactly that question.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A second push to the same branch makes the first one's answer irrelevant.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Nothing here needs a colour code or a progress spinner in a log file.
+  CI: "true"
+
+jobs:
+  test:
+    name: test (node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["20", "22", "24"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - name: Use the toolchain Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Locate the pnpm store
+        id: store
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.store.outputs.path }}
+          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-${{ runner.os }}-
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build
+
+      - name: Typecheck, tests included
+        run: pnpm typecheck
+
+      # The browser test drives the demo page in real Chromium. One cell runs
+      # it: the code path it covers is the client's, not the runtime's, and a
+      # browser download in every cell buys nothing for the minutes it costs.
+      # Everywhere else the test skips, saying so in its own name.
+      - name: Install Chromium
+        if: matrix.node == '22'
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Use Node ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      # Not `pnpm test`: pnpm 11 does not run on Node 20. This is the same
+      # command `pnpm test` would run, with the matrix's Node executing it.
+      - name: Run the suite on Node ${{ matrix.node }}
+        run: |
+          node --version
+          node ./node_modules/vitest/vitest.mjs run
+
+  bun:
+    name: bun
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Locate the pnpm store
+        id: store
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.store.outputs.path }}
+          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-${{ runner.os }}-
+
+      - run: pnpm install --frozen-lockfile
+
+      # The Bun suites import the built `@brobridge/core`, so the build is a
+      # precondition and not a formality.
+      - run: pnpm build
+
+      - uses: oven-sh/setup-bun@v2
+
+      - run: pnpm -F brobridge test:bun
+
+      - run: pnpm -F @brobridge/client test:bun
+
+  quality:
+    name: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Locate the pnpm store
+        id: store
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.store.outputs.path }}
+          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-${{ runner.os }}-
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build
+
+      - name: Engines agree across the workspace
+        run: pnpm check:engines
+
+      - name: publint and @arethetypeswrong/cli
+        run: pnpm publint
+
+      - name: Client bundle ratchet
+        run: pnpm size
+
+      - name: README examples compile against the packed tarballs
+        run: pnpm check:readme
+
+      - name: Adapters resolve from a fresh consumer project
+        run: pnpm check:consumer
+
+  bench-smoke:
+    name: bench (smoke)
+    runs-on: ubuntu-latest
+    # A shared runner's MiB/s and p99 are the runner's numbers. The smoke run
+    # asserts only the machine-independent properties, and even those are not
+    # allowed to fail the build: this job exists to surface a deadlock or a
+    # lost byte early, not to gate on a benchmark.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Locate the pnpm store
+        id: store
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.store.outputs.path }}
+          key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-${{ runner.os }}-
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build
+
+      - name: Benchmarks, properties only
+        run: node scripts/bench.mjs --smoke --json

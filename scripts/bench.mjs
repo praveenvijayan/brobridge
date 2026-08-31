@@ -16,6 +16,14 @@
  *              latency on the others < 5 ms
  *   unary      >= 5 000 echo calls/s on one connection
  *   resume     zero byte loss and a gap < 2 s across a dropped socket
+ *
+ * `--smoke` runs the same four benchmarks with the loads cut down and every
+ * rate and latency threshold dropped. It is what CI runs: a shared runner's
+ * MiB/s and p99 say something about the runner, not about brobridge, so the
+ * smoke run asserts only the properties that are true on any machine —
+ * no byte loss, a paused consumer holding no more than its window, bounded
+ * heap growth, an in-order resume, and every run reaching its end rather than
+ * deadlocking. The numbers are still printed; they are just not a verdict.
  */
 import { createBridge } from 'brobridge';
 import { connect } from '@brobridge/client';
@@ -95,6 +103,8 @@ async function openClient(bridge, options = {}) {
   return Object.assign(client, { killSocket: env.killSocket });
 }
 const json = process.argv.includes('--json');
+/** CI mode: smaller loads, and only the machine-independent assertions. */
+const smoke = process.argv.includes('--smoke');
 const results = {};
 
 /** Print a line unless `--json` was asked for. */
@@ -128,7 +138,7 @@ function percentile(values, p) {
 /* -------------------------------------------------------------------------- */
 
 async function benchFirehose() {
-  const TOTAL = 100 * MIB;
+  const TOTAL = smoke ? 8 * MIB : 100 * MIB;
   const source = filler(4096);
 
   const bridge = await createBridge({
@@ -188,8 +198,10 @@ async function benchFirehose() {
   const heapStable = heapGrowthMiB < 64;
 
   record('firehose', {
-    pass: lossless && heapStable && throughput >= 300,
-    target: '>= 300 MiB/s, no frame loss, heap stable',
+    pass: lossless && heapStable && (smoke || throughput >= 300),
+    target: smoke
+      ? 'no frame loss, heap stable (throughput reported, not asserted)'
+      : '>= 300 MiB/s, no frame loss, heap stable',
     throughputMiBs: Number(throughput.toFixed(1)),
     bytes: received,
     expectedBytes: TOTAL,
@@ -215,7 +227,7 @@ async function benchFirehose() {
  * other streams nothing — from the cost of the concurrency itself.
  */
 async function isolationRun({ streams: STREAMS, credit: CREDIT, paused }) {
-  const PER_STREAM_CHUNKS = 200;
+  const PER_STREAM_CHUNKS = smoke ? 50 : 200;
   const CHUNK = 2048;
 
   const bridge = await createBridge({ initialCredit: CREDIT, maxStreams: 128 });
@@ -278,7 +290,7 @@ async function isolationRun({ streams: STREAMS, credit: CREDIT, paused }) {
 }
 
 async function benchIsolation() {
-  const STREAMS = 50;
+  const STREAMS = smoke ? 16 : 50;
   const CREDIT = 64 * 1024;
 
   const test = await isolationRun({ streams: STREAMS, credit: CREDIT, paused: true });
@@ -287,18 +299,27 @@ async function benchIsolation() {
   // loop, not something the paused stream did to them.
   const control = await isolationRun({ streams: STREAMS - 1, credit: CREDIT, paused: false });
   // The same load with a window wide enough that a credit refill never lands
-  // after the consumer has run dry.
-  const wide = await isolationRun({ streams: STREAMS, credit: 512 * 1024, paused: true });
+  // after the consumer has run dry. It exists to explain the p99 the default
+  // window produces, so a run that does not judge p99 does not need it.
+  const wide = smoke
+    ? { p99: null }
+    : await isolationRun({ streams: STREAMS, credit: 512 * 1024, paused: true });
 
   // The property under test: a stalled consumer holds only its own window and
-  // costs the other streams neither bytes nor measurable latency.
-  const isolated =
-    test.complete && test.parkedBytes <= CREDIT && test.p99 <= control.p99 * 1.5;
+  // costs the other streams neither bytes nor measurable latency. On a shared
+  // runner the latency half of that is unmeasurable, so smoke keeps the two
+  // halves that are not: the others completed, and the paused stream held no
+  // more than the credit it was granted.
+  const isolated = smoke
+    ? test.complete && test.parkedBytes <= CREDIT
+    : test.complete && test.parkedBytes <= CREDIT && test.p99 <= control.p99 * 1.5;
   const latencyMet = test.p99 < 5;
 
   record('isolation', {
-    pass: isolated && latencyMet,
-    target: 'paused stream buffers <= its window; p99 inter-chunk latency < 5 ms',
+    pass: isolated && (smoke || latencyMet),
+    target: smoke
+      ? 'paused stream buffers <= its window; others complete (p99 reported, not asserted)'
+      : 'paused stream buffers <= its window; p99 inter-chunk latency < 5 ms',
     isolationHolds: isolated,
     latencyTargetMet: latencyMet,
     streams: STREAMS,
@@ -315,7 +336,8 @@ async function benchIsolation() {
     summary:
       `paused holds ${String(test.parkedBytes)}/${String(CREDIT)} B, ` +
       `${String(test.drained)} others complete, p99 ${test.p99.toFixed(3)} ms ` +
-      `(control ${control.p99.toFixed(3)} ms, 512 KiB window ${wide.p99.toFixed(3)} ms)`,
+      `(control ${control.p99.toFixed(3)} ms` +
+      `${wide.p99 === null ? '' : `, 512 KiB window ${wide.p99.toFixed(3)} ms`})`,
   });
 }
 
@@ -324,7 +346,7 @@ async function benchIsolation() {
 /* -------------------------------------------------------------------------- */
 
 async function benchUnary() {
-  const CALLS = 20_000;
+  const CALLS = smoke ? 2_000 : 20_000;
   const CONCURRENCY = 64;
 
   const bridge = await createBridge();
@@ -352,8 +374,12 @@ async function benchUnary() {
   await bridge.close();
 
   record('unary', {
-    pass: perSecond >= 5000,
-    target: '>= 5 000 echo calls/s on one connection',
+    // Smoke keeps only what a call rate cannot tell you: every call answered,
+    // and the run finished instead of deadlocking on the shared connection.
+    pass: smoke ? issued === CALLS : perSecond >= 5000,
+    target: smoke
+      ? 'every call answered, no deadlock (rate reported, not asserted)'
+      : '>= 5 000 echo calls/s on one connection',
     calls: CALLS,
     concurrency: CONCURRENCY,
     elapsedMs: Number(elapsedMs.toFixed(1)),
@@ -367,7 +393,7 @@ async function benchUnary() {
 /* -------------------------------------------------------------------------- */
 
 async function benchResume() {
-  const TOTAL_CHUNKS = 4000;
+  const TOTAL_CHUNKS = smoke ? 800 : 4000;
   const CHUNK = 4096;
   const expected = TOTAL_CHUNKS * CHUNK;
 
@@ -443,8 +469,12 @@ async function benchResume() {
   await bridge.close();
 
   record('resume', {
-    pass: received === expected && gaps === 0 && gapMs < 2000,
-    target: 'zero byte loss, gap < 2 s across an immediate reconnect',
+    // The byte-exactness is the property; the recovery time is a number a
+    // shared runner is entitled to be slow about.
+    pass: received === expected && gaps === 0 && killed && (smoke || gapMs < 2000),
+    target: smoke
+      ? 'socket killed mid-transfer, zero byte loss, no gaps (recovery time reported)'
+      : 'zero byte loss, gap < 2 s across an immediate reconnect',
     bytes: received,
     expectedBytes: expected,
     outOfOrderChunks: gaps,
@@ -466,7 +496,10 @@ const suite = {
   resume: benchResume,
 };
 
-say(`brobridge benchmarks — ${process.version} on ${process.platform}/${process.arch}\n`);
+say(
+  `brobridge benchmarks${smoke ? ' (smoke)' : ''} — ` +
+    `${process.version} on ${process.platform}/${process.arch}\n`,
+);
 for (const [name, run] of Object.entries(suite)) {
   if (only !== undefined && only !== name) continue;
   await run();
