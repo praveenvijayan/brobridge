@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "brobridge \u2014 secure, high-performance local process <-> browser bridge",
+  "description": "brobridge — secure, high-performance local process <-> browser bridge",
   "license": "MIT",
   "engines": {
     "node": ">=20"
@@ -18,7 +18,8 @@
     "publint": "node scripts/check-packaging.mjs",
     "check": "pnpm build && pnpm test && pnpm publint && pnpm size",
     "size": "node scripts/check-client-size.mjs",
-    "demo": "node --experimental-strip-types scripts/demo.ts"
+    "demo": "node --experimental-strip-types scripts/demo.ts",
+    "check:consumer": "node scripts/check-adapter-consumer.mjs"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.2",
