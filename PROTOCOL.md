@@ -419,6 +419,12 @@ package's responsibility; stage 3 is protocol and is core's.
   authentication and origin checks happen in stages 1 and 2 and are specified
   in `THREAT-MODEL.md`; an endpoint MUST NOT treat a well-formed `HELLO` as
   evidence of a trustworthy peer.
+- A `GET /ws` that passes stage 1 but does not ask to upgrade MUST be answered
+  `426 Upgrade Required`, distinct from the fence's uniform refusal. A browser
+  cannot read the status of a refused upgrade, so this is how a client tells an
+  authentication failure — terminal, §11.1 — from a transport that merely could
+  not carry a WebSocket. The answer says nothing a caller with a valid session
+  cookie does not already know.
 
 ---
 

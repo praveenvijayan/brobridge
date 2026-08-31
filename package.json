@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "brobridge — secure, high-performance local process <-> browser bridge",
+  "description": "brobridge \u2014 secure, high-performance local process <-> browser bridge",
   "license": "MIT",
   "engines": {
     "node": ">=20"
@@ -16,12 +16,17 @@
     "test:watch": "vitest",
     "typecheck": "tsc -b && tsc -p tsconfig.tests.json",
     "publint": "node scripts/check-packaging.mjs",
-    "check": "pnpm build && pnpm test && pnpm publint"
+    "check": "pnpm build && pnpm test && pnpm publint && pnpm size",
+    "size": "node scripts/check-client-size.mjs",
+    "demo": "node --experimental-strip-types scripts/demo.ts"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.2",
+    "@brobridge/client": "workspace:*",
     "@types/node": "^22.10.2",
     "@vitest/coverage-v8": "^3.2.7",
+    "brobridge": "workspace:*",
+    "esbuild": "^0.28.2",
     "publint": "^0.3.15",
     "typescript": "^5.7.2",
     "vitest": "^3.0.5"

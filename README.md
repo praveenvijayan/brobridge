@@ -9,9 +9,9 @@ credit-based flow control, resume across reconnects, and — the part that is
 actually hard — a trust fence that keeps every *other* page in the user's
 browser out.
 
-> **Status: pre-alpha.** The wire protocol, the threat model and
-> `@brobridge/core` — codec, multiplexer, flow control and resume — are done.
-> The server, client and adapters land next. See
+> **Status: pre-alpha.** The wire protocol, the threat model, `@brobridge/core`,
+> the `brobridge` host and `@brobridge/client` are done and work end to end,
+> in Node, in Bun and in a real browser. The framework adapters land next. See
 > [`DEVELOPMENT-PROMPTS.md`](../DEVELOPMENT-PROMPTS.md) for the phase plan.
 
 ## Why
@@ -41,23 +41,25 @@ brobridge answers both:
 | Package | npm name | What it is |
 | --- | --- | --- |
 | [`packages/core`](./packages/core) | `@brobridge/core` | Protocol: codec, mux, flow control, resume. Zero runtime deps, any JS runtime. **Implemented.** |
-| [`packages/server`](./packages/server) | `brobridge` | Node >= 20 and Bun host: listener, trust fence, token bootstrap, cookie auth. |
-| [`packages/client`](./packages/client) | `@brobridge/client` | Browser client: reconnect, resume, typed calls, streams. Zero runtime deps, < 10 KB min+gzip. |
+| [`packages/server`](./packages/server) | `brobridge` | Node >= 20 and Bun host: listener, trust fence, token bootstrap, cookie auth. **Implemented.** |
+| [`packages/client`](./packages/client) | `@brobridge/client` | Browser client: reconnect, resume, typed calls, streams. No third-party runtime deps. **Implemented.** |
 | [`packages/adapters`](./packages/adapters) | `@brobridge/adapters` | Subpath adapters for `birpc`, oRPC and tRPC. |
 
 ## Quickstart
-
-> The API below is the target shape from `PROTOCOL.md`; it becomes runnable as
-> Phases 3 and 4 land.
 
 ```ts
 // host process
 import { createBridge } from 'brobridge';
 
-const bridge = await createBridge({
-  expose: {
-    echo: (message: string) => message,
-  },
+const bridge = await createBridge(); // binds 127.0.0.1 on an ephemeral port
+
+bridge.expose('demo', { echo: (message: string) => message });
+bridge.stream('ticker', async (stream) => {
+  const encoder = new TextEncoder();
+  for (let tick = 0; ; tick += 1) {
+    await stream.write(encoder.encode(`${String(tick)} `)); // resolves as credit allows
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+  }
 });
 
 console.log(`open ${bridge.url}`); // http://127.0.0.1:52341/?bt=<one-time token>
@@ -67,9 +69,16 @@ console.log(`open ${bridge.url}`); // http://127.0.0.1:52341/?bt=<one-time token
 // browser
 import { connect } from '@brobridge/client';
 
-const bridge = await connect(location.href);
-await bridge.call('echo', 'hello'); // 'hello'
+const bridge = await connect(location.href); // burns the token, keeps the cookie
+await bridge.call('demo.echo', 'hello'); // 'hello'
+
+for await (const chunk of await bridge.openStream('ticker')) {
+  console.log(new TextDecoder().decode(chunk)); // survives a dropped socket
+}
 ```
+
+Both halves, running, with a button that cuts the socket so the resume is
+visible: `node --experimental-strip-types scripts/demo.ts`.
 
 ## Development
 
@@ -78,9 +87,19 @@ pnpm install
 pnpm build     # tsc -b across the workspace, in reference order
 pnpm test      # vitest, all packages
 pnpm publint   # publint + @arethetypeswrong/cli against every package
+pnpm size      # the browser client's bundle budget
+pnpm demo      # host + page, on a loopback port
 ```
 
-Requires Node >= 20 and pnpm 11. Bun is needed for the Bun-tagged server tests.
+Bun covers the other half of the matrix:
+
+```bash
+pnpm -F brobridge test:bun          # the Bun host
+pnpm -F @brobridge/client test:bun  # the client against a Bun host
+```
+
+Requires Node >= 20 and pnpm 11. Bun is needed for the Bun-tagged suites, and
+the browser smoke test skips itself when no Chromium is installed.
 
 ## Documents
 

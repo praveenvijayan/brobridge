@@ -4,9 +4,18 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "tsBuildInfoFile": "./.tsbuildinfo",
-    "lib": ["ES2023", "DOM"],
+    "lib": [
+      "ES2023",
+      "DOM"
+    ],
     "types": []
   },
-  "include": ["src/**/*.ts"],
-  "references": [{ "path": "../core" }]
+  "include": [
+    "src/**/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../core"
+    }
+  ]
 }
