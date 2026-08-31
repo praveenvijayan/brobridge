@@ -18,18 +18,23 @@ npm install @brobridge/client
 ```ts
 import { connect } from '@brobridge/client';
 
+const terminal = document.querySelector('#terminal') as HTMLElement;
+const statusBadge = document.querySelector('#status') as HTMLElement;
+const decoder = new TextDecoder();
+
 // Redeems the ?bt= launch token exactly once, then keeps only the origin: the
 // token is never retained, never logged, never sent again.
 const bridge = await connect(location.href);
 
 // Unary call. Arguments and the result are JSON.
 const contents = await bridge.call<string>('files.read', '/etc/hostname');
+console.log(contents);
 
 // Stream. Iterating is what grants credit, so a slow consumer applies
 // backpressure to the producer automatically, and stalls only this stream.
 const pty = await bridge.openStream('pty.attach', { cols: 80, rows: 24 });
 for await (const chunk of pty) {
-  terminal.write(chunk); // Uint8Array
+  terminal.textContent += decoder.decode(chunk); // chunk is a Uint8Array
 }
 
 // Connection state is an event stream you can render.
@@ -128,6 +133,7 @@ Faults that never reached a host are a `BridgeClientError` with a stable
 type level; the runtime stays a string-keyed call, deliberately. Full
 end-to-end inference is the job of `@brobridge/adapters`.
 
+<!-- check-readme: fragment -->
 ```ts
 interface Files {
   read(path: string): Promise<string>;

@@ -9,10 +9,13 @@ credit-based flow control, resume across reconnects, and — the part that is
 actually hard — a trust fence that keeps every *other* page in the user's
 browser out.
 
-> **Status: pre-alpha.** The wire protocol, the threat model, `@brobridge/core`,
-> the `brobridge` host and `@brobridge/client` are done and work end to end,
-> in Node, in Bun and in a real browser. The framework adapters land next. See
-> [`DEVELOPMENT-PROMPTS.md`](../DEVELOPMENT-PROMPTS.md) for the phase plan.
+> **Status: 0.1.0, pre-1.0.** The wire protocol, the threat model, all four
+> packages and the `birpc`, oRPC and tRPC adapters are implemented and work end
+> to end, in Node, in Bun and in a real browser. The audit that closes the
+> first release — spec conformance, an adversarial security re-test, the
+> cross-runtime matrix, benchmarks and packaging — is written up in
+> [`VERIFICATION-REPORT.md`](./VERIFICATION-REPORT.md), including what it did
+> not verify.
 
 ## Why
 
@@ -43,7 +46,7 @@ brobridge answers both:
 | [`packages/core`](./packages/core) | `@brobridge/core` | Protocol: codec, mux, flow control, resume. Zero runtime deps, any JS runtime. **Implemented.** |
 | [`packages/server`](./packages/server) | `brobridge` | Node >= 20 and Bun host: listener, trust fence, token bootstrap, cookie auth. **Implemented.** |
 | [`packages/client`](./packages/client) | `@brobridge/client` | Browser client: reconnect, resume, typed calls, streams. No third-party runtime deps. **Implemented.** |
-| [`packages/adapters`](./packages/adapters) | `@brobridge/adapters` | Subpath adapters for `birpc`, oRPC and tRPC. |
+| [`packages/adapters`](./packages/adapters) | `@brobridge/adapters` | Subpath adapters for `birpc`, oRPC and tRPC. **Implemented.** |
 
 ## Quickstart
 
@@ -91,6 +94,15 @@ pnpm size      # the browser client's bundle budget
 pnpm demo      # host + page, on a loopback port
 ```
 
+Release and verification:
+
+```bash
+node scripts/bench.mjs           # the performance targets, with numbers
+node scripts/check-publish.mjs   # npm publish --dry-run for every package
+pnpm check:consumer              # packed tarballs in a fresh temp project
+pnpm changeset                   # describe a change for the next release
+```
+
 Bun covers the other half of the matrix:
 
 ```bash
@@ -105,6 +117,10 @@ the browser smoke test skips itself when no Chromium is installed.
 
 - [`PROTOCOL.md`](./PROTOCOL.md) — normative wire protocol (RFC-style).
 - [`THREAT-MODEL.md`](./THREAT-MODEL.md) — normative threat model.
+- [`SECURITY.md`](./SECURITY.md) — how to report a vulnerability, and the
+  threat model in one page.
+- [`VERIFICATION-REPORT.md`](./VERIFICATION-REPORT.md) — the release audit,
+  with the evidence and the open items.
 
 Both are binding: code that disagrees with them is a defect, and a deliberate
 behaviour change edits the document in the same commit.

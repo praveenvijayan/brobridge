@@ -29,6 +29,7 @@ interface Carrier {
 
 ## Example
 
+<!-- check-readme: fragment -->
 ```ts
 import { BridgeEndpoint } from '@brobridge/core';
 
@@ -51,6 +52,7 @@ await stream.write(new TextEncoder().encode('ls -la\n'));
 
 A unary call is the same machinery with a shorter life:
 
+<!-- check-readme: fragment -->
 ```ts
 const response = await endpoint.call('users.get', new TextEncoder().encode('{"id":1}'));
 ```
@@ -60,6 +62,7 @@ const response = await endpoint.call('users.get', new TextEncoder().encode('{"id
 The responder side registers one handler and reads the stream. Throw a
 `BridgeError` synchronously to reject the `OPEN` with a protocol error code:
 
+<!-- check-readme: fragment -->
 ```ts
 import { BridgeError, ErrorCode, SessionHost } from '@brobridge/core';
 
@@ -90,6 +93,7 @@ An endpoint outlives its carrier. When a connection dies the endpoint moves to
 replay ring. Attaching a fresh carrier sends `RESUME`, and the consumer sees
 every byte exactly once, in order, across the gap:
 
+<!-- check-readme: fragment -->
 ```ts
 await endpoint.attach(freshCarrier); // sends RESUME with each stream's cursor
 ```

@@ -67,6 +67,7 @@ paths and internal state.
 
 To push into the tab, use the session:
 
+<!-- check-readme: fragment -->
 ```ts
 const bridge = await createBridge({
   onSession: (session) => {

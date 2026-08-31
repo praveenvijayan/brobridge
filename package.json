@@ -19,17 +19,27 @@
     "check": "pnpm build && pnpm test && pnpm publint && pnpm size",
     "size": "node scripts/check-client-size.mjs",
     "demo": "node --experimental-strip-types scripts/demo.ts",
-    "check:consumer": "node scripts/check-adapter-consumer.mjs"
+    "check:consumer": "node scripts/check-adapter-consumer.mjs",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "pnpm build && changeset publish",
+    "publish:dry": "node scripts/check-publish.mjs",
+    "check:readme": "node scripts/check-readme-examples.mjs",
+    "bench": "node scripts/bench.mjs",
+    "verify": "pnpm build && pnpm test && pnpm publint && pnpm size && pnpm check:readme && pnpm check:consumer && pnpm publish:dry"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.2",
     "@brobridge/client": "workspace:*",
+    "@changesets/cli": "^3.0.1",
     "@types/node": "^22.10.2",
+    "@types/ws": "^8.18.1",
     "@vitest/coverage-v8": "^3.2.7",
     "brobridge": "workspace:*",
     "esbuild": "^0.28.2",
     "publint": "^0.3.15",
     "typescript": "^5.7.2",
-    "vitest": "^3.0.5"
+    "vitest": "^3.0.5",
+    "ws": "^8.21.3"
   }
 }

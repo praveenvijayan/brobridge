@@ -26,6 +26,7 @@ version. Importing one subpath never loads another framework.
 
 ```ts
 // host process
+import os from 'node:os';
 import { createBridge } from 'brobridge';
 import { mount } from '@brobridge/adapters/trpc';
 import { initTRPC } from '@trpc/server';
@@ -47,6 +48,7 @@ mount(bridge, appRouter);
 console.log(bridge.url); // open this
 ```
 
+<!-- check-readme: fragment -->
 ```ts
 // browser
 import { connect } from '@brobridge/client';
@@ -73,12 +75,14 @@ in one place only.
 
 ## oRPC
 
+<!-- check-readme: fragment -->
 ```ts
 // host process
 import { mount } from '@brobridge/adapters/orpc';
 mount(bridge, router);
 ```
 
+<!-- check-readme: fragment -->
 ```ts
 // browser
 import { createORPCClient } from '@orpc/client';
@@ -101,6 +105,7 @@ calls and event iterators share one ordered, credit-controlled channel.
 birpc is symmetric, and so is the adapter: the host gets a birpc *group* with
 one client per connected tab.
 
+<!-- check-readme: fragment -->
 ```ts
 // host process
 import { mount } from '@brobridge/adapters/birpc';
@@ -112,6 +117,7 @@ const group = mount<TabFunctions, HostFunctions>(bridge, { add: (a, b) => a + b 
 await group.broadcast.reload();
 ```
 
+<!-- check-readme: fragment -->
 ```ts
 // browser
 import { createBirpcLink } from '@brobridge/adapters/birpc';

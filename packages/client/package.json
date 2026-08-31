@@ -1,6 +1,6 @@
 {
   "name": "@brobridge/client",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "type": "module",
   "description": "brobridge browser client: reconnect, resume, typed calls and streams",
   "license": "MIT",
