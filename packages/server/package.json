@@ -1,0 +1,54 @@
+{
+  "name": "brobridge",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "brobridge server: Node and Bun host with trust fence, token bootstrap and cookie auth",
+  "license": "MIT",
+  "author": "brobridge contributors",
+  "homepage": "https://github.com/brobridge/brobridge#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/brobridge/brobridge.git",
+    "directory": "packages/server"
+  },
+  "bugs": {
+    "url": "https://github.com/brobridge/brobridge/issues"
+  },
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "brobridge",
+    "websocket",
+    "localhost",
+    "bridge",
+    "rpc-transport",
+    "bun",
+    "node"
+  ],
+  "dependencies": {
+    "@brobridge/core": "workspace:^"
+  }
+}

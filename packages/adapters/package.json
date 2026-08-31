@@ -1,0 +1,61 @@
+{
+  "name": "@brobridge/adapters",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "brobridge adapters for birpc, oRPC and tRPC",
+  "license": "MIT",
+  "author": "brobridge contributors",
+  "homepage": "https://github.com/brobridge/brobridge#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/brobridge/brobridge.git",
+    "directory": "packages/adapters"
+  },
+  "bugs": {
+    "url": "https://github.com/brobridge/brobridge/issues"
+  },
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./birpc": {
+      "types": "./dist/birpc.d.ts",
+      "default": "./dist/birpc.js"
+    },
+    "./orpc": {
+      "types": "./dist/orpc.d.ts",
+      "default": "./dist/orpc.js"
+    },
+    "./trpc": {
+      "types": "./dist/trpc.d.ts",
+      "default": "./dist/trpc.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "brobridge",
+    "adapter",
+    "birpc",
+    "orpc",
+    "trpc"
+  ]
+}

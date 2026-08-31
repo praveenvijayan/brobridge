@@ -1,0 +1,28 @@
+{
+  "name": "@brobridge/monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "brobridge — secure, high-performance local process <-> browser bridge",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@11.9.0",
+  "scripts": {
+    "build": "tsc -b",
+    "build:clean": "tsc -b --clean",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -b && tsc -p tsconfig.tests.json",
+    "publint": "node scripts/check-packaging.mjs",
+    "check": "pnpm build && pnpm test && pnpm publint"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.2",
+    "@types/node": "^22.10.2",
+    "publint": "^0.3.15",
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.5"
+  }
+}

@@ -1,0 +1,7 @@
+packages:
+  - "packages/*"
+
+# esbuild ships prebuilt binaries and needs its install script to select the
+# platform binary. Required by vitest (and by the Phase 4 bundle-size check).
+allowBuilds:
+  esbuild: true
