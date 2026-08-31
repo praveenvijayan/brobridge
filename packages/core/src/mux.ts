@@ -32,6 +32,7 @@ import type {
   ResumeCursor,
   ResumeFailure,
   SequencedFrame,
+  StreamGrant,
   StreamMode,
   StreamState,
 } from './types.js';
@@ -169,6 +170,14 @@ export class BridgeStream implements AsyncIterable<Uint8Array> {
   // Receive side.
   readonly #recvSeq = new SeqTracker();
   #peerCredit: number;
+  /**
+   * Every payload byte this endpoint has ever granted the peer on this
+   * stream. `CREDIT` is unsequenced and never replayed, so a grant handed to
+   * a dying socket is lost while this side has already counted it; the
+   * running total is what lets a resume restore the window exactly
+   * (`PROTOCOL.md` §9.4).
+   */
+  #grantedTotal: number;
   #ungranted = 0;
   #queue: Uint8Array[] = [];
   #readWaiters: Deferred<void>[] = [];
@@ -201,6 +210,7 @@ export class BridgeStream implements AsyncIterable<Uint8Array> {
     this.#state = init.initiator ? 'opening' : 'open';
     this.#sendCredit = init.sendCredit;
     this.#peerCredit = init.peerCredit;
+    this.#grantedTotal = init.peerCredit;
     if (!init.initiator) {
       this.#openAcked = true;
       this.#opened.resolve();
@@ -467,6 +477,29 @@ export class BridgeStream implements AsyncIterable<Uint8Array> {
     return this.#recvSeq.lastSeq;
   }
 
+  /** @internal Cumulative payload bytes granted to the peer on this stream. */
+  get grantedTotal(): number {
+    return this.#grantedTotal;
+  }
+
+  /**
+   * Restore the send window from the peer's cumulative grant.
+   *
+   * Absolute, not an increment, so applying it twice is the same as applying
+   * it once — which is what makes it safe to send on every resume regardless
+   * of which grants the dead socket swallowed. The result may be negative
+   * when this side sent optimistically past the grant (`PROTOCOL.md` §8.1
+   * rule 2); the writer then waits for `CREDIT` as usual.
+   *
+   * @internal
+   */
+  resyncSendCredit(peerGrantedTotal: number): void {
+    const restored = peerGrantedTotal - this.#sentBytes;
+    if (restored === this.#sendCredit) return;
+    this.#sendCredit = restored;
+    if (restored > 0) this.#wakeWriters();
+  }
+
   /** @internal True while the stream still has state worth resuming. */
   get resumable(): boolean {
     return this.#state !== 'closed' && this.#state !== 'reaped';
@@ -628,6 +661,7 @@ export class BridgeStream implements AsyncIterable<Uint8Array> {
     if (grant <= 0) return;
     this.#ungranted -= grant;
     this.#peerCredit += grant;
+    this.#grantedTotal += grant;
     this.#host.sendStreamFrame({
       type: FrameType.CREDIT,
       streamId: this.id,
@@ -988,7 +1022,13 @@ export class BridgeEndpoint implements StreamHost {
     }
     const cursors: ResumeCursor[] = [];
     for (const stream of this.#streams.values()) {
-      if (stream.resumable) cursors.push({ streamId: stream.id, lastSeq: stream.lastReceivedSeq });
+      if (stream.resumable) {
+        cursors.push({
+          streamId: stream.id,
+          lastSeq: stream.lastReceivedSeq,
+          granted: stream.grantedTotal,
+        });
+      }
     }
     this.#emit({
       type: FrameType.RESUME,
@@ -1264,6 +1304,9 @@ export class BridgeEndpoint implements StreamHost {
         this.#onResumeFail(frame);
         return;
       case FrameType.PING:
+        // Keepalive is not exempt from §6.1: answering before the handshake
+        // has settled would put a frame on the wire ahead of HELLO_ACK.
+        if (!this.#requireHandshake(frame)) return;
         this.#emit({
           type: FrameType.PONG,
           streamId: 0,
@@ -1273,6 +1316,7 @@ export class BridgeEndpoint implements StreamHost {
         });
         return;
       case FrameType.PONG: {
+        if (!this.#requireHandshake(frame)) return;
         const pending = this.#pings.get(frame.payload.nonce);
         if (pending === undefined) return;
         this.#pings.delete(frame.payload.nonce);
@@ -1280,6 +1324,7 @@ export class BridgeEndpoint implements StreamHost {
         return;
       }
       case FrameType.GOAWAY:
+        if (!this.#requireHandshake(frame)) return;
         this.#goawayReceived = true;
         this.#options.onGoaway?.(frame.payload.code, frame.payload.lastStreamId);
         return;
@@ -1551,10 +1596,26 @@ export class BridgeEndpoint implements StreamHost {
     const plan = planReplay(frame.payload.streams, this.#replay);
     const requested = new Set(frame.payload.streams.map((cursor) => cursor.streamId));
 
+    // Restore each resumed stream's send window from the peer's cumulative
+    // grant before anything is written on the new carrier: a grant lost with
+    // the dead socket would otherwise strand this side at zero credit
+    // forever, because nothing ever re-sends an unsequenced frame (§9.4).
+    for (const cursor of frame.payload.streams) {
+      if (cursor.granted === undefined) continue;
+      this.#streams.get(cursor.streamId)?.resyncSendCredit(cursor.granted);
+    }
+
+    const grants: StreamGrant[] = [];
+    for (const streamId of plan.resumed) {
+      const stream = this.#streams.get(streamId);
+      if (stream !== undefined) grants.push({ streamId, granted: stream.grantedTotal });
+    }
+
     const ack: ResumeAckPayload = {
       sessionId: frame.payload.sessionId,
       resumed: plan.resumed,
       failed: plan.failed,
+      credit: grants,
     };
     this.#state = 'open';
     this.#emit({ type: FrameType.RESUME_ACK, streamId: 0, seq: 0, flags: FrameFlags.NONE, payload: ack });
@@ -1615,6 +1676,11 @@ export class BridgeEndpoint implements StreamHost {
     for (const failure of frame.payload.failed) {
       const stream = this.#streams.get(failure.streamId);
       stream?.fail(resumeFailureError(failure));
+    }
+    // The other half of the credit restore: grants the server made that died
+    // with the old socket (§9.4).
+    for (const grant of frame.payload.credit ?? []) {
+      this.#streams.get(grant.streamId)?.resyncSendCredit(grant.granted);
     }
     // Replay lands first; anything held while detached follows it in order.
     this.#flushPending();

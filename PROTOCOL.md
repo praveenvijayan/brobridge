@@ -306,13 +306,27 @@ and the sender MUST close the connection after sending it.
 {
   "sessionId": "…",  // string, REQUIRED, from a previous HELLO_ACK
   "streams": [       // array, REQUIRED, may be empty
-    { "streamId": 3, "lastSeq": 417 }
+    { "streamId": 3, "lastSeq": 417, "granted": 196608 }
   ]
 }
 ```
 
 `lastSeq` is the highest `seq` the client has **fully processed** on that
 stream. `0` means nothing was processed and replay starts at `seq = 1`.
+
+`granted` is OPTIONAL: the cumulative count of `DATA` payload bytes this
+endpoint has granted the peer on that stream, counting `OPEN.credit` and every
+`CREDIT` increment since. It exists because `CREDIT` is unsequenced and is
+therefore never replayed (§9.4): a grant written to a socket that then died is
+lost, while the granting side has already counted it as delivered. The two
+peers' views of `available` then differ for the rest of the session, and a
+producer whose last grant was the lost one waits forever. A **cumulative**
+count rather than an increment is what makes the repair idempotent — applying
+it twice is applying it once — so it is safe to send on every resume without
+knowing which frames the dead socket swallowed.
+
+A receiver that omits `granted` gets the pre-repair behaviour: the peer leaves
+its window as it stands.
 
 ### 5.10 `RESUME_ACK`
 
@@ -322,9 +336,17 @@ stream. `0` means nothing was processed and replay starts at `seq = 1`.
   "resumed": [3, 5], // integer[], REQUIRED, streams that will be replayed
   "failed": [        // array, REQUIRED, may be empty; per-stream failures
     { "streamId": 7, "code": "SNAPSHOT_REQUIRED" }
+  ],
+  "credit": [        // array, OPTIONAL; the responder's own cumulative grants
+    { "streamId": 3, "granted": 65536 }
   ]
 }
 ```
+
+`credit` is the mirror of `RESUME.streams[].granted` (§5.9), for the other
+direction: the responder's cumulative grant per resumed stream, so the
+reconnecting peer can restore its own send window exactly. Same semantics,
+same idempotence.
 
 ### 5.11 `RESUME_FAIL`
 
@@ -695,11 +717,22 @@ For each entry in `RESUME.streams` the server evaluates:
   error. Silently continuing with a gap is forbidden.
 - Streams the client did not list are treated as abandoned and MUST be
   cancelled server-side, freeing their buffers.
-- Credit is **not** replayed. After `RESUME_ACK` both sides restore
-  `available` to the values in effect when the connection dropped: the server
-  keeps its own accounting, and the client re-grants credit as its consumers
-  read. Because `CREDIT` frames are unsequenced they never appear in the
-  replay buffer.
+- Credit is **not** replayed: `CREDIT` frames are unsequenced and never appear
+  in the replay buffer. Instead, both sides restore `available` from the
+  cumulative grant totals carried by the handshake — `RESUME.streams[].granted`
+  (§5.9) and `RESUME_ACK.credit` (§5.10). On receiving them an endpoint MUST
+  set, for each resumed stream,
+
+  ```
+  available = peer.granted - (payload bytes this endpoint has sent on it)
+  ```
+
+  which MAY be negative (§8.1 rule 2), in which case the sender waits for
+  `CREDIT` as usual. Re-granting alone is not sufficient and MUST NOT be relied
+  on: a grant handed to a dying socket is counted by the granting side and
+  never received by the peer, so without the totals the two views of
+  `available` diverge permanently, and a stream whose last grant was the lost
+  one never moves again.
 
 ### 9.5 Reaping
 

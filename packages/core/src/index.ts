@@ -81,6 +81,7 @@ export type {
   ResumeFailPayload,
   ResumeFailure,
   ResumePayload,
+  StreamGrant,
   SequencedFrame,
   StreamMode,
   StreamState,

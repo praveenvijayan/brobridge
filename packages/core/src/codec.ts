@@ -35,6 +35,7 @@ import type {
   ResumeFailPayload,
   ResumeFailure,
   ResumePayload,
+  StreamGrant,
   StreamMode,
 } from './types.js';
 import {
@@ -574,7 +575,15 @@ function readResume(o: Record<string, unknown>, streamId: number): ResumePayload
     if (!isPlainObject(entry) || !isU32(entry['streamId']) || !isU32(entry['lastSeq'])) {
       return violation(streamId, 'RESUME.streams entries need integer streamId and lastSeq');
     }
-    cursors.push({ streamId: entry['streamId'], lastSeq: entry['lastSeq'] });
+    const granted = entry['granted'];
+    if (granted !== undefined && !isU32(granted)) {
+      return violation(streamId, 'RESUME.streams granted must be a non-negative integer');
+    }
+    cursors.push({
+      streamId: entry['streamId'],
+      lastSeq: entry['lastSeq'],
+      ...(granted === undefined ? {} : { granted }),
+    });
   }
   return { sessionId, streams: cursors };
 }
@@ -600,7 +609,25 @@ function readResumeAck(
     }
     failures.push({ streamId: entry['streamId'], code: entry['code'] });
   }
-  return { sessionId, resumed: resumed as number[], failed: failures };
+
+  const credit = o['credit'];
+  if (credit !== undefined && !Array.isArray(credit)) {
+    return violation(streamId, 'RESUME_ACK.credit must be an array');
+  }
+  const grants: StreamGrant[] = [];
+  for (const entry of credit ?? []) {
+    if (!isPlainObject(entry) || !isU32(entry['streamId']) || !isU32(entry['granted'])) {
+      return violation(streamId, 'RESUME_ACK.credit entries need integer streamId and granted');
+    }
+    grants.push({ streamId: entry['streamId'], granted: entry['granted'] });
+  }
+
+  return {
+    sessionId,
+    resumed: resumed as number[],
+    failed: failures,
+    ...(credit === undefined ? {} : { credit: grants }),
+  };
 }
 
 function readResumeFail(

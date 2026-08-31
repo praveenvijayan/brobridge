@@ -235,6 +235,16 @@ export interface CancelPayload {
 export interface ResumeCursor {
   readonly streamId: number;
   readonly lastSeq: number;
+  /**
+   * Cumulative `DATA` payload bytes this endpoint has granted the peer on
+   * this stream, counting `OPEN.credit` and every `CREDIT` since.
+   *
+   * `CREDIT` is unsequenced and never replayed (§9.4), so a grant that was
+   * handed to a dying socket is lost while the granting side has already
+   * counted it. Carrying the running total makes the window recoverable
+   * exactly rather than approximately.
+   */
+  readonly granted?: number;
 }
 
 /** @see PROTOCOL.md §5.9 */
@@ -249,11 +259,24 @@ export interface ResumeFailure {
   readonly code: string;
 }
 
+/** One peer's cumulative grant on one stream. @see PROTOCOL.md §5.10 */
+export interface StreamGrant {
+  readonly streamId: number;
+  /** Cumulative `DATA` payload bytes granted on this stream. */
+  readonly granted: number;
+}
+
 /** @see PROTOCOL.md §5.10 */
 export interface ResumeAckPayload {
   readonly sessionId: string;
   readonly resumed: readonly number[];
   readonly failed: readonly ResumeFailure[];
+  /**
+   * The responder's own cumulative grants, so the reconnecting peer can
+   * restore its send window exactly. Same purpose as
+   * {@link ResumeCursor.granted}, for the other direction.
+   */
+  readonly credit?: readonly StreamGrant[];
 }
 
 /** @see PROTOCOL.md §5.11 */

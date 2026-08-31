@@ -15,7 +15,7 @@
  * @see PROTOCOL.md §9.3 "Resume handshake"
  */
 
-import { FrameDecoder } from './codec.js';
+import { FrameDecoder, encodeFrame } from './codec.js';
 import { ConnectionClosedError, ErrorCode, ProtocolError } from './errors.js';
 import type { AttachOutcome, BridgeEndpointOptions } from './mux.js';
 import { BridgeEndpoint, generateSessionId } from './mux.js';
@@ -92,13 +92,33 @@ export class SessionHost {
         reject(new ConnectionClosedError(ErrorCode.INTERNAL_ERROR, 'carrier closed during handshake'));
       });
 
+      /**
+       * Refuse a connection that never identified itself.
+       *
+       * `PROTOCOL.md` §6.1 and §3.2 both require the connection-level `ERROR`
+       * to go out *before* the close, so a client learns why it was dropped
+       * instead of having to guess from a bare socket teardown.
+       */
+      const refuse = (fault: ProtocolError): void => {
+        settled = true;
+        carrier.send(
+          encodeFrame({
+            type: FrameType.ERROR,
+            streamId: 0,
+            seq: 0,
+            flags: 0,
+            payload: { code: fault.code, message: fault.message },
+          }),
+        );
+        carrier.close?.();
+        reject(fault);
+      };
+
       carrier.onMessage((bytes) => {
         if (settled) return;
         const { frames, error } = decoder.push(bytes);
         if (error !== null) {
-          settled = true;
-          carrier.close?.();
-          reject(error);
+          refuse(error);
           return;
         }
         const first = frames[0];
@@ -121,9 +141,7 @@ export class SessionHost {
           return;
         }
 
-        settled = true;
-        carrier.close?.();
-        reject(
+        refuse(
           new ProtocolError(
             ErrorCode.PROTOCOL_VIOLATION,
             'the first frame on a connection must be HELLO or RESUME',
