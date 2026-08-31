@@ -23,17 +23,34 @@ const root = fileURLToPath(new URL('../../..', import.meta.url));
 /** The demo host, started exactly the way its documentation says to. */
 let demo: ChildProcessWithoutNullStreams | null = null;
 let demoUrl = '';
-let browserAvailable = false;
-let launchFailure = '';
+let ready = false;
+let skipReason = '';
+
+/**
+ * The demo is TypeScript and its documented command is Node's type stripping,
+ * which arrives in Node 22.6. On Node 20 — the declared `engines` floor, and a
+ * cell in the CI matrix — there is nothing to spawn, so say that instead of
+ * waiting out the start-up timeout on a process that exited immediately.
+ */
+function typeStrippingAvailable(): boolean {
+  const [major = 0, minor = 0] = process.versions.node.split('.').map(Number);
+  return major > 22 || (major === 22 && minor >= 6);
+}
 
 beforeAll(async () => {
+  if (!typeStrippingAvailable()) {
+    skipReason =
+      `Node ${process.versions.node} cannot run scripts/demo.ts: ` +
+      '--experimental-strip-types needs Node >= 22.6';
+    return;
+  }
+
   try {
     const { chromium } = await import('playwright');
     const probe = await chromium.launch();
     await probe.close();
-    browserAvailable = true;
   } catch (cause) {
-    launchFailure = String(cause).split('\n')[0] ?? 'unknown';
+    skipReason = `no Chromium available: ${String(cause).split('\n')[0] ?? 'unknown'}`;
     return;
   }
 
@@ -49,6 +66,7 @@ beforeAll(async () => {
     });
     demo?.on('error', reject);
   });
+  ready = true;
 }, 60_000);
 
 afterAll(() => {
@@ -57,8 +75,8 @@ afterAll(() => {
 
 describe('the demo page in Chromium', () => {
   it('calls, streams, and resumes across a socket the page kills', async ({ skip }) => {
-    if (!browserAvailable) {
-      skip(`no Chromium available: ${launchFailure}`);
+    if (!ready) {
+      skip(skipReason);
       return;
     }
 

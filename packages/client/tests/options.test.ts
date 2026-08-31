@@ -1,18 +1,43 @@
 /**
  * Option resolution: the defaults are the spec's, and a bad value is refused
  * where it is written rather than where it is used.
+ *
+ * The globals are stubbed rather than borrowed from the host runtime. `fetch`
+ * is global from Node 18 and `WebSocket` only from Node 22, so a suite that
+ * leans on whichever the runtime happens to have tests the runtime, not
+ * `resolveOptions` — and fails on Node 20, the declared `engines` floor. The
+ * last case deletes them again on purpose.
  */
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { resolveOptions } from '../src/options.js';
 
 const globals = globalThis as unknown as Record<string, unknown>;
-const savedSocket = globals['WebSocket'];
-const savedFetch = globals['fetch'];
+const savedSocket = Reflect.getOwnPropertyDescriptor(globalThis, 'WebSocket');
+const savedFetch = Reflect.getOwnPropertyDescriptor(globalThis, 'fetch');
+
+/** A constructor-shaped stand-in: `resolveOptions` only checks the type. */
+const stubSocket = function StubWebSocket(): never {
+  throw new Error('the stub WebSocket is never constructed');
+};
+const stubFetch = (): never => {
+  throw new Error('the stub fetch is never called');
+};
+
+/** Put a global back exactly as it was, including having been absent. */
+function restore(name: string, saved: PropertyDescriptor | undefined): void {
+  if (saved === undefined) Reflect.deleteProperty(globalThis, name);
+  else Object.defineProperty(globalThis, name, saved);
+}
+
+beforeEach(() => {
+  globals['WebSocket'] = stubSocket;
+  globals['fetch'] = stubFetch;
+});
 
 afterEach(() => {
-  globals['WebSocket'] = savedSocket;
-  globals['fetch'] = savedFetch;
+  restore('WebSocket', savedSocket);
+  restore('fetch', savedFetch);
 });
 
 describe('resolveOptions', () => {
@@ -56,7 +81,7 @@ describe('resolveOptions', () => {
     Reflect.deleteProperty(globalThis, 'WebSocket');
     expect(() => resolveOptions({})).toThrow(/no global WebSocket/);
 
-    globals['WebSocket'] = savedSocket;
+    globals['WebSocket'] = stubSocket;
     Reflect.deleteProperty(globalThis, 'fetch');
     expect(() => resolveOptions({})).toThrow(/no global fetch/);
   });
