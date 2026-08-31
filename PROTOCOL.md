@@ -71,7 +71,7 @@ The model:
 | **Initiator** | The endpoint that sent `OPEN` for a given stream. |
 | **Responder** | The endpoint that received that `OPEN`. |
 | **Credit** | A byte allowance granted by a receiver that bounds how much `DATA` payload a sender may transmit on a stream. |
-| **Carrier** | The minimal interface core uses to reach the transport: `send(bytes)`, `onMessage(cb)`, `onClose(cb)`. |
+| **Carrier** | The minimal interface core uses to reach the transport: `send(bytes)`, `onMessage(cb)`, `onClose(cb)`, and an OPTIONAL `close()`. A carrier that omits `close()` leaves closing the connection to its host; an endpoint MUST still stop sending after a connection-level `ERROR` (§5.7). |
 | **Session** | The logical continuity across one or more connections, identified by `sessionId`, that makes resume possible. |
 
 ---
@@ -158,6 +158,13 @@ address one stream.
 
 Notes:
 
+- A receiver MUST reject a frame whose `streamId` contradicts the table with
+  `PROTOCOL_VIOLATION`: a connection-level type (`HELLO`, `HELLO_ACK`,
+  `RESUME`, `RESUME_ACK`, `RESUME_FAIL`, `PING`, `PONG`, `GOAWAY`) carrying a
+  non-zero `streamId`, or a stream-level type (`OPEN`, `OPEN_ACK`, `DATA`,
+  `CREDIT`, `END`, `CANCEL`) carrying `streamId = 0`. `ERROR` is legal at
+  either scope (§5.7). Checking this at the framing layer keeps every later
+  stage free of "which stream did they mean?".
 - **Sequenced** means the frame consumes a `seq` value from the stream's
   sender-side counter and is eligible for replay (§9). Only `DATA` and `END`
   are sequenced. Every other frame MUST set `seq = 0`, and a receiver MUST
@@ -551,6 +558,12 @@ stalls only itself.
    still transmit. Frame headers do not consume credit.
 2. Initial `available` for each direction is set by `OPEN.credit` /
    `OPEN_ACK.credit`, defaulting to the negotiated `initialCredit` (§5.2).
+   An initiator that sent `DATA` optimistically while `opening` (§7.3) had no
+   grant to spend yet, so on receiving `OPEN_ACK` it MUST set
+   `available = OPEN_ACK.credit - (payload bytes already sent)`. The responder
+   counts those same bytes against the window it granted, so both peers reach
+   the same number. The result MAY be negative, in which case the sender
+   awaits `CREDIT` before sending again.
 3. A sender MUST NOT emit a `DATA` frame whose `length` exceeds
    `available[stream]`. If the caller's write is larger than the available
    credit, the sender MUST either split the write across frames as credit
@@ -604,7 +617,11 @@ every byte exactly once, in order, across the reconnect.
 - `seq` is a `u32`. Wrap-around is not permitted: an endpoint that would exceed
   `2^32 - 1` MUST close the stream with `SEQ_EXHAUSTED`.
 - The receiver tracks `lastSeq`, the highest sequence number it has fully
-  processed and handed to the consumer.
+  processed. A frame is fully processed once it has been accounted for against
+  the credit window and placed in the receive queue the session owns; it need
+  not have been read by the application. Because that queue survives a dropped
+  connection, replaying frames the consumer has not yet read would deliver
+  them twice.
 - On a live connection a receiver MUST reject a sequenced frame whose `seq` is
   not exactly `lastSeq + 1` with a stream-level `PROTOCOL_VIOLATION`; the
   carrier is ordered and reliable, so a gap is a defect, not loss.

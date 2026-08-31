@@ -12,12 +12,76 @@
  * @packageDocumentation
  */
 
-/**
- * Wire protocol version carried in the frame header and negotiated by
- * `HELLO` / `HELLO_ACK`.
- *
- * @see PROTOCOL.md §3 "Frame header"
- */
-export const PROTOCOL_VERSION = 1 as const;
+export { FrameDecoder, decodeFrame, encodeFrame } from './codec.js';
+export type { DecodeResult } from './codec.js';
 
-export {};
+export {
+  BridgeError,
+  ConnectionClosedError,
+  ERROR_CODES,
+  ErrorCode,
+  ProtocolError,
+  ResumeFailedError,
+  SnapshotRequiredError,
+  StreamError,
+  isErrorCode,
+} from './errors.js';
+export type { ErrorScope } from './errors.js';
+
+export { BridgeEndpoint, BridgeStream, generateSessionId, readAll } from './mux.js';
+export type {
+  AttachOptions,
+  AttachOutcome,
+  BridgeEndpointOptions,
+  EndpointState,
+  OpenStreamOptions,
+} from './mux.js';
+
+export {
+  DEFAULT_REPLAY_WINDOW,
+  ReplayBuffer,
+  SeqCounter,
+  SeqTracker,
+  planReplay,
+} from './resume.js';
+export type { ReplayPlan, ReplayWindow, SeqVerdict } from './resume.js';
+
+export { SessionHost } from './sessions.js';
+export type { SessionHostOptions } from './sessions.js';
+
+export {
+  FRAME_HEADER_SIZE,
+  FrameFlags,
+  FrameType,
+  HARD_MAX_FRAME_SIZE,
+  MAX_CREDIT,
+  MAX_SEQ,
+  MAX_STREAM_ID,
+  PROTOCOL_DEFAULTS,
+  PROTOCOL_VERSION,
+  defaultCreditGrantThreshold,
+  isSequencedType,
+} from './types.js';
+export type {
+  CancelPayload,
+  Carrier,
+  CreditPayload,
+  EndPayload,
+  ErrorPayload,
+  Frame,
+  FrameOf,
+  GoawayPayload,
+  HelloAckPayload,
+  HelloPayload,
+  OpenAckPayload,
+  OpenPayload,
+  PingPayload,
+  ResumeAckPayload,
+  ResumeCursor,
+  ResumeFailPayload,
+  ResumeFailure,
+  ResumePayload,
+  SequencedFrame,
+  StreamMode,
+  StreamState,
+} from './types.js';

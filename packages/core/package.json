@@ -37,7 +37,8 @@
   },
   "scripts": {
     "build": "tsc -b",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [
     "brobridge",
@@ -46,5 +47,8 @@
     "multiplexing",
     "flow-control",
     "resume"
-  ]
+  ],
+  "devDependencies": {
+    "fast-check": "^4.9.0"
+  }
 }

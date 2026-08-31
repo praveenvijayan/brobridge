@@ -9,8 +9,9 @@ credit-based flow control, resume across reconnects, and — the part that is
 actually hard — a trust fence that keeps every *other* page in the user's
 browser out.
 
-> **Status: pre-alpha.** The scaffold, the wire protocol and the threat model
-> are written. Implementation lands package by package. See
+> **Status: pre-alpha.** The wire protocol, the threat model and
+> `@brobridge/core` — codec, multiplexer, flow control and resume — are done.
+> The server, client and adapters land next. See
 > [`DEVELOPMENT-PROMPTS.md`](../DEVELOPMENT-PROMPTS.md) for the phase plan.
 
 ## Why
@@ -39,7 +40,7 @@ brobridge answers both:
 
 | Package | npm name | What it is |
 | --- | --- | --- |
-| [`packages/core`](./packages/core) | `@brobridge/core` | Protocol: codec, mux, flow control, resume. Zero runtime deps, any JS runtime. |
+| [`packages/core`](./packages/core) | `@brobridge/core` | Protocol: codec, mux, flow control, resume. Zero runtime deps, any JS runtime. **Implemented.** |
 | [`packages/server`](./packages/server) | `brobridge` | Node >= 20 and Bun host: listener, trust fence, token bootstrap, cookie auth. |
 | [`packages/client`](./packages/client) | `@brobridge/client` | Browser client: reconnect, resume, typed calls, streams. Zero runtime deps, < 10 KB min+gzip. |
 | [`packages/adapters`](./packages/adapters) | `@brobridge/adapters` | Subpath adapters for `birpc`, oRPC and tRPC. |
