@@ -58,8 +58,8 @@ jobs:
 
       - uses: changesets/action@v2
         with:
-          version-script: pnpm version
-          publish-script: pnpm release
+          version-script: pnpm run version
+          publish-script: pnpm run release
           commit-message: "chore(release): version packages"
           pr-title: "chore(release): version packages"
         env:

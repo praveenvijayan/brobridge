@@ -82,10 +82,10 @@ for (const pkg of PACKAGES) {
 const packed = readdirSync(tarballs).map((file) => join(tarballs, file));
 const overrides = {};
 for (const [name, needle] of [
-  ['@brobridgejs/core', 'brobridge-core-'],
+  ['@brobridgejs/core', 'brobridgejs-core-'],
   ['brobridge', /(^|\/)brobridge-\d/],
-  ['@brobridgejs/client', 'brobridge-client-'],
-  ['@brobridgejs/adapters', 'brobridge-adapters-'],
+  ['@brobridgejs/client', 'brobridgejs-client-'],
+  ['@brobridgejs/adapters', 'brobridgejs-adapters-'],
 ]) {
   overrides[name] = `file:${find(packed, needle)}`;
 }
