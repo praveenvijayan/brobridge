@@ -373,6 +373,21 @@ easy to get wrong:
 The result: **320 pass, 1 skipped on Node 20**, and no product code needed
 changing — the argument in the original text held, but it is now a test result.
 
+Confirmed on GitHub Actions as well, on the first green matrix run
+([`33478170085`](https://github.com/praveenvijayan/brobridge/actions/runs/33478170085)),
+which is also where the skip counts come from:
+
+| Cell | Result |
+| --- | --- |
+| `test (node 20)` | 320 passed, 1 skipped — the browser test, no type stripping |
+| `test (node 22)` | **321 passed** — Chromium installed, so the browser test really runs |
+| `test (node 24)` | 320 passed, 1 skipped — the browser test, no Chromium in this cell |
+| `bun` | both Bun suites pass |
+| `quality` | engines, publint + attw, size ratchet, README examples, consumer check |
+| `bench (smoke)` | all four properties hold (advisory job) |
+
+Whole matrix: **60 seconds wall clock**, against the 10-minute budget.
+
 The browser half is covered inside the Node runs: `client/tests/browser.test.ts`
 drives the demo page in real Chromium through Playwright — call, stream, and a
 resume across a socket the page kills.
