@@ -6,17 +6,17 @@ and what to do. Error identities are stable API: branch on `error.reason`
 
 ## The two error families
 
-**`BridgeClientError`** (from `@brobridge/client`) — faults that happened on
+**`BridgeClientError`** (from `@brobridgejs/client`) — faults that happened on
 the browser side and never reached the host. Discriminant: `reason`.
 
-**`BridgeError`** and subclasses (from `@brobridge/core`, re-exported by the
+**`BridgeError`** and subclasses (from `@brobridgejs/core`, re-exported by the
 client) — faults a peer expressed on the wire. Discriminant: `code`, one of
 the stable strings in [`PROTOCOL.md` §12](../PROTOCOL.md). Subclasses that
 matter to applications: `StreamError`, `SnapshotRequiredError`,
 `ConnectionClosedError`, `ResumeFailedError`.
 
 ```ts
-import { isClientError, SnapshotRequiredError } from '@brobridge/client';
+import { isClientError, SnapshotRequiredError } from '@brobridgejs/client';
 
 try {
   for await (const chunk of stream) render(chunk);

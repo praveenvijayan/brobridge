@@ -1,0 +1,83 @@
+# Manual publish to npm, run from the Actions tab.
+#
+# Complements release.yml: that workflow publishes automatically when the
+# "Version Packages" pull request merges to main. This one is for the cases
+# the automation cannot cover — the automated publish failed halfway, a
+# republish under a different dist-tag, or a first publish before the
+# changesets flow is wired up.
+#
+# `changeset publish` only publishes versions that are not yet on the
+# registry, so rerunning this is safe: already-published packages are
+# skipped, not overwritten.
+#
+# Preconditions (same as release.yml):
+#   1. the `@brobridgejs` scope exists on npm and the account can publish it,
+#   2. `NPM_TOKEN` — an automation token — is set in the repository secrets.
+name: Publish (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      dist-tag:
+        description: npm dist-tag to publish under
+        required: true
+        default: latest
+        type: string
+      dry-run:
+        description: Pack and verify only, publish nothing
+        required: true
+        default: false
+        type: boolean
+
+# Shares the release group so a manual publish never races the automated one.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: publish to npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # changeset publish pushes the release tags
+      id-token: write # npm provenance signs with this
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Changesets reads history to work out what has been released.
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          registry-url: https://registry.npmjs.org
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build
+
+      - run: pnpm test
+
+      - name: Packaging is publishable
+        run: pnpm publint
+
+      - name: Dry run
+        if: inputs.dry-run
+        run: pnpm publish:dry
+
+      - name: Publish
+        if: '!inputs.dry-run'
+        run: pnpm changeset publish --tag "${{ inputs.dist-tag }}"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: "true"
+
+      - name: Push release tags
+        if: '!inputs.dry-run'
+        run: git push --follow-tags

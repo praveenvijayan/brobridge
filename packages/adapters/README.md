@@ -1,4 +1,4 @@
-# @brobridge/adapters
+# @brobridgejs/adapters
 
 brobridge is a transport, not an RPC framework. These adapters let an existing
 framework ride on it — so your application code keeps the framework's own
@@ -8,16 +8,16 @@ security, multiplexing, backpressure and resume.
 ## Install
 
 ```bash
-npm install @brobridge/adapters
+npm install @brobridgejs/adapters
 ```
 
 Each framework is a subpath export, so you pull in only the one you use:
 
 | Subpath | Framework | Server | Browser |
 | --- | --- | --- | --- |
-| `@brobridge/adapters/birpc` | [birpc](https://github.com/antfu/birpc) | `mount` | `createBirpcLink` |
-| `@brobridge/adapters/orpc` | [oRPC](https://orpc.dev) | `mount` | `createORPCLink` |
-| `@brobridge/adapters/trpc` | [tRPC](https://trpc.io) v11 | `mount` | `createTRPCLink` |
+| `@brobridgejs/adapters/birpc` | [birpc](https://github.com/antfu/birpc) | `mount` | `createBirpcLink` |
+| `@brobridgejs/adapters/orpc` | [oRPC](https://orpc.dev) | `mount` | `createORPCLink` |
+| `@brobridgejs/adapters/trpc` | [tRPC](https://trpc.io) v11 | `mount` | `createTRPCLink` |
 
 The frameworks themselves are optional peer dependencies: bring your own
 version. Importing one subpath never loads another framework.
@@ -28,7 +28,7 @@ version. Importing one subpath never loads another framework.
 // host process
 import os from 'node:os';
 import { createBridge } from 'brobridge';
-import { mount } from '@brobridge/adapters/trpc';
+import { mount } from '@brobridgejs/adapters/trpc';
 import { initTRPC } from '@trpc/server';
 
 const t = initTRPC.create();
@@ -51,8 +51,8 @@ console.log(bridge.url); // open this
 <!-- check-readme: fragment -->
 ```ts
 // browser
-import { connect } from '@brobridge/client';
-import { createTRPCLink } from '@brobridge/adapters/trpc';
+import { connect } from '@brobridgejs/client';
+import { createTRPCLink } from '@brobridgejs/adapters/trpc';
 import { createTRPCClient } from '@trpc/client';
 
 const bridge = await connect(location.href);
@@ -78,7 +78,7 @@ in one place only.
 <!-- check-readme: fragment -->
 ```ts
 // host process
-import { mount } from '@brobridge/adapters/orpc';
+import { mount } from '@brobridgejs/adapters/orpc';
 mount(bridge, router);
 ```
 
@@ -87,7 +87,7 @@ mount(bridge, router);
 // browser
 import { createORPCClient } from '@orpc/client';
 import type { RouterClient } from '@orpc/server';
-import { createORPCLink } from '@brobridge/adapters/orpc';
+import { createORPCLink } from '@brobridgejs/adapters/orpc';
 
 const client: RouterClient<typeof router> = createORPCClient(
   await createORPCLink(bridge),
@@ -108,7 +108,7 @@ one client per connected tab.
 <!-- check-readme: fragment -->
 ```ts
 // host process
-import { mount } from '@brobridge/adapters/birpc';
+import { mount } from '@brobridgejs/adapters/birpc';
 
 interface HostFunctions { add(a: number, b: number): number }
 interface TabFunctions { reload(): void }
@@ -120,7 +120,7 @@ await group.broadcast.reload();
 <!-- check-readme: fragment -->
 ```ts
 // browser
-import { createBirpcLink } from '@brobridge/adapters/birpc';
+import { createBirpcLink } from '@brobridgejs/adapters/birpc';
 
 const rpc = await createBirpcLink<HostFunctions, TabFunctions>(bridge, {
   reload: () => location.reload(),

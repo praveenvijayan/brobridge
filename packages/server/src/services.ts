@@ -3,14 +3,14 @@
  *
  * This is the raw call surface. It is deliberately thin — JSON arguments in,
  * JSON result out — because the typed surfaces belong to the adapters
- * (`@brobridge/adapters`), which sit on top of it. It must nonetheless work
+ * (`@brobridgejs/adapters`), which sit on top of it. It must nonetheless work
  * standalone, so a host application can use the bridge without an RPC
  * framework at all.
  *
  * @see PROTOCOL.md §10 "Unary calls"
  */
-import type { BridgeStream } from '@brobridge/core';
-import { BridgeError, ErrorCode } from '@brobridge/core';
+import type { BridgeStream } from '@brobridgejs/core';
+import { BridgeError, ErrorCode } from '@brobridgejs/core';
 
 /** A method callable over the bridge. Arguments and result must be JSON-encodable. */
 export type ServiceMethod = (...args: never[]) => unknown;

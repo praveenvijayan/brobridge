@@ -50,7 +50,7 @@
     "node"
   ],
   "dependencies": {
-    "@brobridge/core": "workspace:^",
+    "@brobridgejs/core": "workspace:^",
     "ws": "^8.21.3"
   },
   "devDependencies": {

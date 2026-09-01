@@ -25,7 +25,7 @@ framework.
 
 | | birpc | oRPC | tRPC v11 |
 | --- | --- | --- | --- |
-| Subpath | `@brobridge/adapters/birpc` | `@brobridge/adapters/orpc` | `@brobridge/adapters/trpc` |
+| Subpath | `@brobridgejs/adapters/birpc` | `@brobridgejs/adapters/orpc` | `@brobridgejs/adapters/trpc` |
 | Server side | `mount(bridge, functions)` | `mount(bridge, router)` | `mount(bridge, router)` |
 | Browser side | `createBirpcLink(bridge)` | `createORPCLink(bridge)` | `createTRPCLink(bridge)` |
 | Types | inferred from your functions | router + schemas | router |

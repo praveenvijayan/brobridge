@@ -1,6 +1,6 @@
 /**
  * Wire types and protocol constants shared by every module in
- * `@brobridge/core`.
+ * `@brobridgejs/core`.
  *
  * Everything here is a direct transcription of `PROTOCOL.md`. Magic numbers
  * live in this file and in `codec.ts` only; the rest of the package refers to

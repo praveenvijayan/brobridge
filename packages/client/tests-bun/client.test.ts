@@ -1,14 +1,14 @@
 /**
  * The client against the Bun host, under Bun's own test runner.
  *
- * `pnpm -F @brobridge/client test` covers the client against the Node backend.
+ * `pnpm -F @brobridgejs/client test` covers the client against the Node backend.
  * This file covers the other half of the matrix: the same client code, the
  * same protocol, with `Bun.serve` owning the socket on the host side. The
  * point is not to re-test the client's logic — that is runtime-independent
  * and already covered — but to prove that a tab talking to a Bun host gets the
  * same handshake, the same streams and the same resume.
  *
- * Run with `pnpm -F @brobridge/client test:bun`.
+ * Run with `pnpm -F @brobridgejs/client test:bun`.
  */
 import { afterEach, describe, expect, it } from 'bun:test';
 import { createBridge } from 'brobridge';

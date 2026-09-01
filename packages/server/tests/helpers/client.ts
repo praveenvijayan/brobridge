@@ -1,13 +1,13 @@
 /**
  * A browser-shaped client for the server tests.
  *
- * It does what `@brobridge/client` will do in Phase 4 — bootstrap with the
+ * It does what `@brobridgejs/client` will do in Phase 4 — bootstrap with the
  * launch token, then connect a WebSocket carrying the cookie — but with
  * nothing hidden: the tests need to see the raw handshake, so this helper
- * stays a thin wrapper over `ws` and `@brobridge/core`.
+ * stays a thin wrapper over `ws` and `@brobridgejs/core`.
  */
-import type { AttachOutcome, BridgeStream, Carrier } from '@brobridge/core';
-import { BridgeEndpoint } from '@brobridge/core';
+import type { AttachOutcome, BridgeStream, Carrier } from '@brobridgejs/core';
+import { BridgeEndpoint } from '@brobridgejs/core';
 import WebSocket from 'ws';
 
 /** What the bootstrap request yielded. */

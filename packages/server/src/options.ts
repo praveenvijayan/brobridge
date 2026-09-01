@@ -7,7 +7,7 @@
  *
  * @see PROTOCOL.md §13 "Limits and defaults"
  */
-import { PROTOCOL_DEFAULTS } from '@brobridge/core';
+import { PROTOCOL_DEFAULTS } from '@brobridgejs/core';
 
 import type { BridgeSession } from './manager.js';
 

@@ -1,4 +1,4 @@
-# @brobridge/core
+# @brobridgejs/core
 
 The brobridge protocol, as pure logic: frame codec, stream multiplexing,
 credit-based flow control and resume. No sockets, no runtime dependencies,
@@ -10,7 +10,7 @@ a behaviour change requires a spec change in the same commit.
 ## Install
 
 ```bash
-npm install @brobridge/core
+npm install @brobridgejs/core
 ```
 
 ## The carrier interface
@@ -31,7 +31,7 @@ interface Carrier {
 
 <!-- check-readme: fragment -->
 ```ts
-import { BridgeEndpoint } from '@brobridge/core';
+import { BridgeEndpoint } from '@brobridgejs/core';
 
 const endpoint = new BridgeEndpoint({ role: 'client' });
 await endpoint.attach(carrier); // sends HELLO, resolves on HELLO_ACK
@@ -64,7 +64,7 @@ The responder side registers one handler and reads the stream. Throw a
 
 <!-- check-readme: fragment -->
 ```ts
-import { BridgeError, ErrorCode, SessionHost } from '@brobridge/core';
+import { BridgeError, ErrorCode, SessionHost } from '@brobridgejs/core';
 
 const host = new SessionHost({
   onStream: (stream) => {

@@ -261,7 +261,7 @@ A2 to an attacker.
 
 **Enforced by.** `brobridge` — `auth.ts` (single-use burn, TTL, constant-time
 compare), bootstrap handler (`303` + `Referrer-Policy` + `Cache-Control`
-headers). `@brobridge/client` — token stripped from retained state after the
+headers). `@brobridgejs/client` — token stripped from retained state after the
 single bootstrap fetch; a test asserts the token appears in no retained field
 and in no later request.
 
@@ -335,7 +335,7 @@ to the same authenticated session, and the receiver discards `seq <= lastSeq`
 
 **Enforced by.** `brobridge` — upgrade path authenticates before frame
 processing; session store keys the replay buffers by authenticated session.
-`@brobridge/core` — `resume.ts`, `seq <= lastSeq` discard rule.
+`@brobridgejs/core` — `resume.ts`, `seq <= lastSeq` discard rule.
 
 ---
 
@@ -359,7 +359,7 @@ protocol-level, not best effort:
 | Decoder reassembly | A partial frame's buffered bytes count against `maxFrameSize`; a peer dribbling a never-completed frame is bounded and subject to the idle timeout |
 | Slow socket | The server respects carrier backpressure (`bufferedAmount` / drain) instead of queueing unboundedly in userspace |
 
-**Enforced by.** `@brobridge/core` — `codec.ts` (frame size, pre-allocation
+**Enforced by.** `@brobridgejs/core` — `codec.ts` (frame size, pre-allocation
 check), `mux.ts` (stream limit, credit accounting, violation counter),
 `resume.ts` (ring bounds). `brobridge` — carrier backpressure in the socket
 pump.
@@ -428,7 +428,7 @@ error responses, `ERROR` frames or server logs.
 to a browser peer; it is reduced to `INTERNAL_ERROR`.
 
 **Enforced by.** `brobridge` — a redaction helper on the logging path and a
-test that feeds a token-bearing URL through it. `@brobridge/core` — error
+test that feeds a token-bearing URL through it. `@brobridgejs/core` — error
 construction never embeds a payload it did not itself produce.
 
 ---

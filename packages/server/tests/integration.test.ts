@@ -8,7 +8,7 @@
  * shutdown, a listener that outlives `close()` — are not visible from a unit
  * test.
  */
-import { ErrorCode, StreamError } from '@brobridge/core';
+import { ErrorCode, StreamError } from '@brobridgejs/core';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { createBridge } from '../src/index.js';
@@ -286,7 +286,7 @@ describe('the HTTP fallback', () => {
     const bridge = await demoBridge();
     const { cookie } = await bootstrap(bridge.url);
 
-    const { encodeFrame, FrameType, FrameFlags, FrameDecoder } = await import('@brobridge/core');
+    const { encodeFrame, FrameType, FrameFlags, FrameDecoder } = await import('@brobridgejs/core');
     const open = encodeFrame({
       type: FrameType.OPEN,
       streamId: 1,

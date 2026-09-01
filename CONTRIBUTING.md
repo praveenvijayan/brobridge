@@ -35,7 +35,7 @@ pnpm check:engines    # the engines floor, stated the same way everywhere
 pnpm publint          # publint + @arethetypeswrong/cli, all packages
 pnpm size             # client bundle ratchet (12.5 KiB) — a regression fails
 pnpm -F brobridge test:bun
-pnpm -F @brobridge/client test:bun
+pnpm -F @brobridgejs/client test:bun
 ```
 
 `pnpm check:consumer` (packed tarballs in a fresh project) and
@@ -71,7 +71,7 @@ have added a flaky test.
 
 ## Ground rules
 
-- **Dependencies.** `@brobridge/core` and `@brobridge/client` have zero
+- **Dependencies.** `@brobridgejs/core` and `@brobridgejs/client` have zero
   runtime dependencies — hard rule. Elsewhere, a new runtime dependency
   needs explicit justification in the PR body.
 - **TypeScript.** Strict, `exactOptionalPropertyTypes`, no `any` in public

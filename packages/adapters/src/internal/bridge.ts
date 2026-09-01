@@ -2,13 +2,13 @@
  * What an adapter needs from a bridge, and nothing more.
  *
  * These are structural types, satisfied by `Bridge` from `brobridge` and by
- * `Bridge` from `@brobridge/client` without either package being imported
+ * `Bridge` from `@brobridgejs/client` without either package being imported
  * here. An application that only ever mounts a router on the host must not be
  * made to install the browser client to typecheck, and the reverse holds too.
  *
  * @packageDocumentation
  */
-import type { BridgeStream, OpenStreamOptions } from '@brobridge/core';
+import type { BridgeStream, OpenStreamOptions } from '@brobridgejs/core';
 
 /** Context a host hands to a stream route. */
 export interface StreamRouteContext {
@@ -29,7 +29,7 @@ export interface BridgeHostLike {
   stream(name: string, handler: StreamRoute): void;
 }
 
-/** The browser side of a bridge: `Bridge` from `@brobridge/client`. */
+/** The browser side of a bridge: `Bridge` from `@brobridgejs/client`. */
 export interface BridgeClientLike {
   /** Call an exposed method with JSON arguments. */
   call<T = unknown>(route: string, ...args: readonly unknown[]): Promise<T>;

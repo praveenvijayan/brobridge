@@ -6,7 +6,7 @@
  * and nothing the server buffers on behalf of a peer is unbounded
  * (§5.10, last row).
  */
-import { BridgeEndpoint, ResumeFailedError } from '@brobridge/core';
+import { BridgeEndpoint, ResumeFailedError } from '@brobridgejs/core';
 import { describe, expect, it } from 'vitest';
 
 import { SessionManager } from '../src/manager.js';

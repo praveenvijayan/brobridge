@@ -2,7 +2,7 @@
  * `connect()` and the bridge handle it returns.
  *
  * The client's whole job is to make a socket that dies look like a socket that
- * did not. `@brobridge/core` already owns the part that makes that possible:
+ * did not. `@brobridgejs/core` already owns the part that makes that possible:
  * the session — stream table, sequence cursors, credit — lives in a
  * `BridgeEndpoint` that outlives any one carrier. This module keeps that
  * endpoint fed: it opens sockets, hands them over, and when one dies it waits
@@ -17,8 +17,8 @@
  *
  * @see PROTOCOL.md §9 "Resume", §11 "Keepalive"
  */
-import type { BridgeStream, OpenStreamOptions } from '@brobridge/core';
-import { BridgeEndpoint, ConnectionClosedError, ResumeFailedError } from '@brobridge/core';
+import type { BridgeStream, OpenStreamOptions } from '@brobridgejs/core';
+import { BridgeEndpoint, ConnectionClosedError, ResumeFailedError } from '@brobridgejs/core';
 
 import { backoffDelay, delay } from './backoff.js';
 import { BridgeClientError } from './errors.js';

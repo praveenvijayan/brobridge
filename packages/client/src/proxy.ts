@@ -9,7 +9,7 @@
  * time.
  *
  * End-to-end inference from a real router, including inferred return types
- * across a network boundary, is the job of `@brobridge/adapters`.
+ * across a network boundary, is the job of `@brobridgejs/adapters`.
  */
 
 /** Any callable, for filtering a service interface down to its methods. */

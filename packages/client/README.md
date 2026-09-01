@@ -1,4 +1,4 @@
-# @brobridge/client
+# @brobridgejs/client
 
 The browser side of brobridge. Standards only — a `WebSocket` and a `fetch` —
 with no third-party runtime dependencies: token bootstrap, `HELLO`
@@ -10,13 +10,13 @@ Normative spec: [`PROTOCOL.md`](../../PROTOCOL.md).
 ## Install
 
 ```bash
-npm install @brobridge/client
+npm install @brobridgejs/client
 ```
 
 ## Example
 
 ```ts
-import { connect } from '@brobridge/client';
+import { connect } from '@brobridgejs/client';
 
 const terminal = document.querySelector('#terminal') as HTMLElement;
 const statusBadge = document.querySelector('#status') as HTMLElement;
@@ -119,7 +119,7 @@ transient and retried.
 ## Errors
 
 Faults the wire carried keep their protocol types, re-exported from
-`@brobridge/core`: `StreamError` (with `error.code` from `PROTOCOL.md` §12),
+`@brobridgejs/core`: `StreamError` (with `error.code` from `PROTOCOL.md` §12),
 `SnapshotRequiredError`, `ResumeFailedError`, `ConnectionClosedError`.
 
 Faults that never reached a host are a `BridgeClientError` with a stable
@@ -131,7 +131,7 @@ Faults that never reached a host are a `BridgeClientError` with a stable
 
 `makeProxy<T>()` maps a service interface onto promise-returning methods at the
 type level; the runtime stays a string-keyed call, deliberately. Full
-end-to-end inference is the job of `@brobridge/adapters`.
+end-to-end inference is the job of `@brobridgejs/adapters`.
 
 <!-- check-readme: fragment -->
 ```ts
@@ -158,7 +158,7 @@ await files.read('/etc/hostname'); // -> string
 ## Size
 
 The client's own code is well inside the 10 KiB min+gzip budget; bundled
-together with `@brobridge/core`, which is what a browser actually downloads,
+together with `@brobridgejs/core`, which is what a browser actually downloads,
 the total is over it. `pnpm size` prints both numbers and says by how much:
 
 ```
@@ -168,7 +168,7 @@ shipped  (core inlined):  12022 bytes min+gzip (11.74 KiB)
 
 Closing that gap means giving core a browser-only entry point that leaves out
 the replay buffer and session hosting, which only the host side uses. That is a
-change to `@brobridge/core`, not to this package.
+change to `@brobridgejs/core`, not to this package.
 
 ## License
 

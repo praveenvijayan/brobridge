@@ -1,12 +1,12 @@
 /**
- * `@brobridge/adapters` — RPC framework adapters for brobridge.
+ * `@brobridgejs/adapters` — RPC framework adapters for brobridge.
  *
  * brobridge is a transport, not an RPC framework. Each adapter is a subpath
  * export, so an application installs and loads only the framework it uses:
  *
- * - `@brobridge/adapters/birpc` — birpc over one duplex stream per tab.
- * - `@brobridge/adapters/orpc` — oRPC's message-port adapter over a stream.
- * - `@brobridge/adapters/trpc` — tRPC v11 calls and subscriptions.
+ * - `@brobridgejs/adapters/birpc` — birpc over one duplex stream per tab.
+ * - `@brobridgejs/adapters/orpc` — oRPC's message-port adapter over a stream.
+ * - `@brobridgejs/adapters/trpc` — tRPC v11 calls and subscriptions.
  *
  * Every adapter comes in both directions: `mount()` on the host, and a
  * `create…Link()` the framework's own client consumes, so end-to-end types

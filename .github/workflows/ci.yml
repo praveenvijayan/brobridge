@@ -69,7 +69,7 @@ jobs:
       # and a root `pnpm exec` does not see it.
       - name: Install Chromium
         if: matrix.node == '22'
-        run: pnpm -F @brobridge/client exec playwright install --with-deps chromium
+        run: pnpm -F @brobridgejs/client exec playwright install --with-deps chromium
 
       - name: Use Node ${{ matrix.node }}
         uses: actions/setup-node@v7
@@ -107,7 +107,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # The Bun suites import the built `@brobridge/core`, so the build is a
+      # The Bun suites import the built `@brobridgejs/core`, so the build is a
       # precondition and not a formality.
       - run: pnpm build
 
@@ -115,7 +115,7 @@ jobs:
 
       - run: pnpm -F brobridge test:bun
 
-      - run: pnpm -F @brobridge/client test:bun
+      - run: pnpm -F @brobridgejs/client test:bun
 
   quality:
     name: quality

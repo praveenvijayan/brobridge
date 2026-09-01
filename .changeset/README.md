@@ -3,8 +3,8 @@
 Version and changelog management for the brobridge workspace.
 
 The four published packages are **fixed**: they carry one version between
-them. `@brobridge/client` and `brobridge` speak the wire protocol that
-`@brobridge/core` defines, so a version pair that has never been tested
+them. `@brobridgejs/client` and `brobridge` speak the wire protocol that
+`@brobridgejs/core` defines, so a version pair that has never been tested
 together is a support burden nobody asked for.
 
 Adding a changeset:

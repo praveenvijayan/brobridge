@@ -1,7 +1,7 @@
 ---
-'@brobridge/adapters': minor
-'@brobridge/client': minor
-'@brobridge/core': minor
+'@brobridgejs/adapters': minor
+'@brobridgejs/client': minor
+'@brobridgejs/core': minor
 'brobridge': minor
 ---
 

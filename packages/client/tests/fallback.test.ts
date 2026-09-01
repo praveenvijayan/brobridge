@@ -5,8 +5,8 @@
  * here is everything that can go wrong on a surface with no session to recover
  * into, where the client must fail by name rather than guess.
  */
-import type { Frame } from '@brobridge/core';
-import { ErrorCode, FrameFlags, FrameType, StreamError, encodeFrame } from '@brobridge/core';
+import type { Frame } from '@brobridgejs/core';
+import { ErrorCode, FrameFlags, FrameType, StreamError, encodeFrame } from '@brobridgejs/core';
 import { describe, expect, it } from 'vitest';
 
 import { callOverHttp } from '../src/fallback.js';

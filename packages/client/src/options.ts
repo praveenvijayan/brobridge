@@ -44,7 +44,7 @@ export function resolveOptions(options: ConnectOptions): ResolvedConnectOptions 
     maxFrameSize: options.maxFrameSize,
     maxStreams: options.maxStreams,
     initialCredit: options.initialCredit,
-    clientName: options.clientName ?? '@brobridge/client',
+    clientName: options.clientName ?? '@brobridgejs/client',
     onStream: options.onStream,
     socket: options.socket ?? defaultSocketFactory(),
     fetch: options.fetch ?? defaultFetch(),

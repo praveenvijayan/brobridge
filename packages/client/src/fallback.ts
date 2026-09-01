@@ -10,9 +10,9 @@
  * Streams and resume are not available here, and the client says so by name
  * rather than degrading them silently.
  */
-import type { Frame } from '@brobridge/core';
-import { FrameDecoder, FrameFlags, FrameType, StreamError, encodeFrame, isErrorCode } from '@brobridge/core';
-import { ErrorCode } from '@brobridge/core';
+import type { Frame } from '@brobridgejs/core';
+import { FrameDecoder, FrameFlags, FrameType, StreamError, encodeFrame, isErrorCode } from '@brobridgejs/core';
+import { ErrorCode } from '@brobridgejs/core';
 
 import { BridgeClientError } from './errors.js';
 import type { FetchLike } from './types.js';

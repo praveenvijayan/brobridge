@@ -11,8 +11,8 @@
  *
  * @see PROTOCOL.md §9.3 "Resume handshake"
  */
-import type { BridgeEndpoint, BridgeStream, OpenStreamOptions } from '@brobridge/core';
-import { ErrorCode, SessionHost } from '@brobridge/core';
+import type { BridgeEndpoint, BridgeStream, OpenStreamOptions } from '@brobridgejs/core';
+import { ErrorCode, SessionHost } from '@brobridgejs/core';
 
 import type { SocketCarrier } from './carrier.js';
 import type { ResolvedOptions } from './options.js';

@@ -4,7 +4,7 @@
  *
  * Two numbers matter, and they are not the same number:
  *
- * - **own** — `@brobridge/client` with `@brobridge/core` left external. This
+ * - **own** — `@brobridgejs/client` with `@brobridgejs/core` left external. This
  *   is the code this package adds: bootstrap, reconnect, resume driving,
  *   fallback, proxy.
  * - **shipped** — client *and* core bundled, which is what a browser actually
@@ -57,7 +57,7 @@ function kib(bytes) {
 }
 
 try {
-  const own = await measure('own', ['@brobridge/core']);
+  const own = await measure('own', ['@brobridgejs/core']);
   const shipped = await measure('shipped', []);
 
   console.log(`own      (core external): ${String(own)} bytes min+gzip (${kib(own)})`);
@@ -79,7 +79,7 @@ try {
     console.log(
       `NOTE shipped misses the ${kib(BUDGETS.shipped.target)} target by ` +
         `${String(shipped - BUDGETS.shipped.target)} bytes. The protocol engine in ` +
-        '@brobridge/core is the bulk of it; a browser-only core entry point that drops ' +
+        '@brobridgejs/core is the bulk of it; a browser-only core entry point that drops ' +
         'the replay buffer and session hosting is what would close the gap.',
     );
   } else {

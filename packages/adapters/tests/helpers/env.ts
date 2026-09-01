@@ -2,13 +2,13 @@
  * A browser, reduced to what an adapter test needs from one.
  *
  * Nothing below the browser line is mocked: `brobridge` binds an ephemeral
- * loopback port and `@brobridge/client` speaks the real protocol to it over a
+ * loopback port and `@brobridgejs/client` speaks the real protocol to it over a
  * real socket. What this supplies is what a browser would have supplied — a
  * cookie jar, and headers on the WebSocket upgrade — plus the ability to cut
  * a socket the way a failing network does.
  */
-import type { Bridge as ClientBridge, ConnectOptions, FetchLike, SocketLike } from '@brobridge/client';
-import { connect } from '@brobridge/client';
+import type { Bridge as ClientBridge, ConnectOptions, FetchLike, SocketLike } from '@brobridgejs/client';
+import { connect } from '@brobridgejs/client';
 import type { Bridge as HostBridge, BridgeOptions } from 'brobridge';
 import { createBridge } from 'brobridge';
 import { WebSocket as NodeWebSocket } from 'ws';

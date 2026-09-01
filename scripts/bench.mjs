@@ -3,7 +3,7 @@
  * The performance verification of Phase 6 §4.
  *
  * Every number here is measured over a real loopback WebSocket between a real
- * `brobridge` host and the real `@brobridge/client`, not over an in-memory
+ * `brobridge` host and the real `@brobridgejs/client`, not over an in-memory
  * pipe: the point is to verify what an application gets, including the socket,
  * the framing and the credit accounting.
  *
@@ -26,7 +26,7 @@
  * deadlocking. The numbers are still printed; they are just not a verdict.
  */
 import { createBridge } from 'brobridge';
-import { connect } from '@brobridge/client';
+import { connect } from '@brobridgejs/client';
 import { WebSocket as NodeWebSocket } from 'ws';
 
 const MIB = 1024 * 1024;

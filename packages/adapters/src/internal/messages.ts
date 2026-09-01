@@ -13,7 +13,7 @@
  *
  * @packageDocumentation
  */
-import type { BridgeStream } from '@brobridge/core';
+import type { BridgeStream } from '@brobridgejs/core';
 
 /** Bytes of framing that precede every message. */
 export const MESSAGE_HEADER_SIZE = 5;

@@ -6,7 +6,7 @@
  * pump, the close listeners and the session wall are exercised exactly as
  * they are over a WebSocket — only the bytes take a shorter path.
  */
-import type { Carrier } from '@brobridge/core';
+import type { Carrier } from '@brobridgejs/core';
 
 import { SocketCarrier } from '../../src/carrier.js';
 import type { SocketAdapter, WriteOutcome } from '../../src/carrier.js';

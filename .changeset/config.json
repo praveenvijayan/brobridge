@@ -2,7 +2,7 @@
   "$schema": "https://unpkg.com/@changesets/config@3.0.0/schema.json",
   "changelog": "@changesets/cli/changelog",
   "commit": false,
-  "fixed": [["@brobridge/core", "brobridge", "@brobridge/client", "@brobridge/adapters"]],
+  "fixed": [["@brobridgejs/core", "brobridge", "@brobridgejs/client", "@brobridgejs/adapters"]],
   "linked": [],
   "access": "public",
   "baseBranch": "main",

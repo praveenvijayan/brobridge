@@ -73,7 +73,7 @@ const bridge = await createBridge({ port: 3080 });
 ## `connect(url, options)` — the browser
 
 ```ts
-import { connect } from '@brobridge/client';
+import { connect } from '@brobridgejs/client';
 const bridge = await connect(location.href, { httpFallback: true });
 ```
 
@@ -103,7 +103,7 @@ token in it is redeemed exactly once and never retained.
 
 | Option | Default | Meaning |
 | --- | --- | --- |
-| `clientName` | `'@brobridge/client'` | Diagnostic name sent in `HELLO.client`. |
+| `clientName` | `'@brobridgejs/client'` | Diagnostic name sent in `HELLO.client`. |
 | `onStream` | — | Called for every stream the *host* pushes to this tab. |
 | `socket` / `fetch` | globals | Injectable constructors, for tests and non-browser runtimes. A runtime with neither global throws a clear `TypeError` at `connect`. |
 | `now` / `random` | `Date.now` / `Math.random` | Injectable clock and jitter source, for deterministic tests. |

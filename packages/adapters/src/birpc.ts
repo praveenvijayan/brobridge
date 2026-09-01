@@ -1,5 +1,5 @@
 /**
- * `@brobridge/adapters/birpc` — birpc over a brobridge stream.
+ * `@brobridgejs/adapters/birpc` — birpc over a brobridge stream.
  *
  * birpc is symmetric: both ends register functions and both ends call the
  * other's. That maps onto one duplex brobridge stream per connected tab, and
@@ -8,12 +8,12 @@
  *
  * ```ts
  * // host
- * import { mount } from '@brobridge/adapters/birpc';
+ * import { mount } from '@brobridgejs/adapters/birpc';
  * const group = mount(bridge, { hash: (text: string) => sha256(text) });
  * await group.broadcast.refresh();
  *
  * // browser
- * import { createBirpcLink } from '@brobridge/adapters/birpc';
+ * import { createBirpcLink } from '@brobridgejs/adapters/birpc';
  * const rpc = await createBirpcLink<HostFunctions>(client, { refresh: () => reload() });
  * await rpc.hash('hello');
  * ```
@@ -21,7 +21,7 @@
  * @see https://github.com/antfu/birpc
  * @packageDocumentation
  */
-import type { BridgeStream } from '@brobridge/core';
+import type { BridgeStream } from '@brobridgejs/core';
 import type { BirpcGroup, BirpcReturn, ChannelOptions, EventOptions } from 'birpc';
 import { createBirpc, createBirpcGroup } from 'birpc';
 

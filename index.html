@@ -377,7 +377,7 @@
       </div>
       <div class="stat">
         <div class="number-display">0</div>
-        <p class="eyebrow">Runtime deps in @brobridge/core</p>
+        <p class="eyebrow">Runtime deps in @brobridgejs/core</p>
       </div>
       <div class="stat">
         <div class="number-display">6<span style="font-size:32px">ms</span></div>
@@ -552,7 +552,7 @@
         <h3 class="title-md">Install the packages</h3>
         <p>Make sure that you have Node ≥ 20 or Bun. Install the host package in your process, and the client package in your web app.</p>
 <pre>npm install brobridge          <span class="c"># host: Node / Bun process</span>
-npm install @brobridge/client  <span class="c"># browser: your web app</span></pre>
+npm install @brobridgejs/client  <span class="c"># browser: your web app</span></pre>
       </div>
     </div>
 
@@ -597,7 +597,7 @@ console.log(`open ${bridge.url}`); <span class="c">// http://127.0.0.1:52341/?bt
           The client redeems the token one time, keeps the signed cookie, and reconnects with backoff after a drop.
         </p>
 <pre><span class="c">// browser</span>
-import { connect } from '@brobridge/client';
+import { connect } from '@brobridgejs/client';
 
 const bridge = await connect(location.href); <span class="c">// burns the token, keeps the cookie</span>
 
@@ -717,17 +717,17 @@ for await (const chunk of await bridge.openStream('ticker')) {
     <div class="grid-3">
       <div class="card-light">
         <h3 class="title-md">birpc</h3>
-        <span class="npm">@brobridge/adapters/birpc</span>
+        <span class="npm">@brobridgejs/adapters/birpc</span>
         <p>Plain typed functions in both directions. No schemas, near-zero concepts. Pick this when you start from nothing and want minimal.</p>
       </div>
       <div class="card-light">
         <h3 class="title-md">oRPC</h3>
-        <span class="npm">@brobridge/adapters/orpc</span>
+        <span class="npm">@brobridgejs/adapters/orpc</span>
         <p>Standard-schema validation (Zod, Valibot, ArkType) and OpenAPI output from the same router. Pick this when you build an API that you validate.</p>
       </div>
       <div class="card-light">
         <h3 class="title-md">tRPC</h3>
-        <span class="npm">@brobridge/adapters/trpc</span>
+        <span class="npm">@brobridgejs/adapters/trpc</span>
         <p>The biggest ecosystem, plus React Query. Subscriptions map onto brobridge streams and get resume for free. Pick this when a tRPC router exists.</p>
       </div>
     </div>
@@ -756,15 +756,15 @@ for await (const chunk of await bridge.openStream('ticker')) {
     <div class="grid-2" style="margin-bottom: var(--sp-lg);">
       <div class="card-dark">
         <h3 class="title-md">BridgeClientError</h3>
-        <p>From <code class="inline">@brobridge/client</code>. The fault happened in the browser and never reached the host. Discriminant: <code class="inline">reason</code>.</p>
+        <p>From <code class="inline">@brobridgejs/client</code>. The fault happened in the browser and never reached the host. Discriminant: <code class="inline">reason</code>.</p>
       </div>
       <div class="card-dark">
         <h3 class="title-md">BridgeError</h3>
-        <p>From <code class="inline">@brobridge/core</code>, re-exported by the client. A peer expressed the fault on the wire. Discriminant: <code class="inline">code</code>.</p>
+        <p>From <code class="inline">@brobridgejs/core</code>, re-exported by the client. A peer expressed the fault on the wire. Discriminant: <code class="inline">code</code>.</p>
       </div>
     </div>
 
-<pre>import { isClientError, SnapshotRequiredError } from '@brobridge/client';
+<pre>import { isClientError, SnapshotRequiredError } from '@brobridgejs/client';
 
 try {
   for await (const chunk of stream) render(chunk);
@@ -842,10 +842,10 @@ try {
       </div>
       <div>
         <h5>Packages</h5>
-        <a href="https://github.com/praveenvijayan/brobridge/tree/main/packages/core">@brobridge/core</a>
+        <a href="https://github.com/praveenvijayan/brobridge/tree/main/packages/core">@brobridgejs/core</a>
         <a href="https://github.com/praveenvijayan/brobridge/tree/main/packages/server">brobridge</a>
-        <a href="https://github.com/praveenvijayan/brobridge/tree/main/packages/client">@brobridge/client</a>
-        <a href="https://github.com/praveenvijayan/brobridge/tree/main/packages/adapters">@brobridge/adapters</a>
+        <a href="https://github.com/praveenvijayan/brobridge/tree/main/packages/client">@brobridgejs/client</a>
+        <a href="https://github.com/praveenvijayan/brobridge/tree/main/packages/adapters">@brobridgejs/adapters</a>
       </div>
       <div>
         <h5>Documents</h5>

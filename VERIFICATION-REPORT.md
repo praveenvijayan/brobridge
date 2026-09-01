@@ -317,12 +317,12 @@ Runtime dependencies, as published:
 
 | Package | Runtime deps |
 | --- | --- |
-| `@brobridge/core` | **none** |
-| `@brobridge/client` | `@brobridge/core` only |
-| `brobridge` | `@brobridge/core`, `ws` |
-| `@brobridge/adapters` | `@brobridge/core`; frameworks are peer deps |
+| `@brobridgejs/core` | **none** |
+| `@brobridgejs/client` | `@brobridgejs/core` only |
+| `brobridge` | `@brobridgejs/core`, `ws` |
+| `@brobridgejs/adapters` | `@brobridgejs/core`; frameworks are peer deps |
 
-`@brobridge/client` carries exactly one dependency, and it is the workspace's
+`@brobridgejs/client` carries exactly one dependency, and it is the workspace's
 own dependency-free protocol core. **Zero third-party** runtime dependencies in
 both `core` and `client`, which is the rule's intent — but stated precisely
 here rather than rounded to "zero".
@@ -397,7 +397,7 @@ resume across a socket the page kills.
 ## 4. Performance
 
 Measured by `scripts/bench.mjs` over a **real loopback WebSocket** between a
-real `brobridge` host and the real `@brobridge/client` — not an in-memory pipe —
+real `brobridge` host and the real `@brobridgejs/client` — not an in-memory pipe —
 so the numbers include framing, the socket and credit accounting. Node 22.23.1,
 macOS 15, arm64. Reproduce with `node scripts/bench.mjs` (or `--json`).
 
@@ -473,7 +473,7 @@ complete at all.
 
 | | Budget | Measured |
 | --- | --- | --- |
-| `@brobridge/client` alone | < 10 KiB | **3 928 B** (3.84 KiB) |
+| `@brobridgejs/client` alone | < 10 KiB | **3 928 B** (3.84 KiB) |
 | Shipped (core inlined) | 10 KiB target, 12.5 KiB ratchet | **12 263 B** (11.98 KiB) |
 
 Missed by 2 023 bytes, of which 188 are the §2.4 credit fix. Measured
@@ -534,10 +534,10 @@ snippets are complete and which need their context.
 
 Two real friction points were found this way and fixed:
 
-- **`@brobridge/client`'s opening example did not compile**: it used
+- **`@brobridgejs/client`'s opening example did not compile**: it used
   `terminal` and `statusBadge` without introducing them. A reader copying the
   first example in the browser client's README got errors. Now self-contained.
-- **`@brobridge/adapters`' tRPC host example called `os.hostname()` without
+- **`@brobridgejs/adapters`' tRPC host example called `os.hostname()` without
   importing `os`.** Now self-contained.
 
 Every README now has at least one standalone, compiling example, and the root
@@ -567,15 +567,15 @@ along with the packages table, and the release/verification commands added.
 
 ```
 $ node scripts/check-publish.mjs
-=== @brobridge/core@0.1.0 — npm publish --dry-run ===      + @brobridge/core@0.1.0
+=== @brobridgejs/core@0.1.0 — npm publish --dry-run ===      + @brobridgejs/core@0.1.0
 === brobridge@0.1.0 — npm publish --dry-run ===            + brobridge@0.1.0
-=== @brobridge/client@0.1.0 — npm publish --dry-run ===    + @brobridge/client@0.1.0
-=== @brobridge/adapters@0.1.0 — npm publish --dry-run ===  + @brobridge/adapters@0.1.0
+=== @brobridgejs/client@0.1.0 — npm publish --dry-run ===    + @brobridgejs/client@0.1.0
+=== @brobridgejs/adapters@0.1.0 — npm publish --dry-run ===  + @brobridgejs/adapters@0.1.0
 publish dry-run clean.
 ```
 
-The four packages are released as one version on purpose: `@brobridge/client`
-and `brobridge` speak the wire protocol `@brobridge/core` defines, and a
+The four packages are released as one version on purpose: `@brobridgejs/client`
+and `brobridge` speak the wire protocol `@brobridgejs/core` defines, and a
 version pair that has never been tested together is a support burden nobody
 asked for. `check-publish.mjs` fails if they ever drift.
 

@@ -1,5 +1,5 @@
 /**
- * The public shapes of `@brobridge/client`: connection state, options, and the
+ * The public shapes of `@brobridgejs/client`: connection state, options, and the
  * two host primitives the client borrows from its environment.
  *
  * The client is written against standard `WebSocket` and `fetch` and takes no
@@ -8,7 +8,7 @@
  * way to put a `Cookie` header on a `WebSocket` upgrade, and because a browser
  * that lacks a cookie jar is not a case worth designing around.
  */
-import type { BridgeStream } from '@brobridge/core';
+import type { BridgeStream } from '@brobridgejs/core';
 
 /**
  * What the connection is doing, as an application would render it.

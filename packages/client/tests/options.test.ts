@@ -49,7 +49,7 @@ describe('resolveOptions', () => {
     expect(resolved.heartbeatTimeoutMs).toBe(45_000);
     expect(resolved.httpFallback).toBe(false);
     expect(resolved.wsAttemptsBeforeFallback).toBe(3);
-    expect(resolved.clientName).toBe('@brobridge/client');
+    expect(resolved.clientName).toBe('@brobridgejs/client');
   });
 
   it('keeps what the caller passed', () => {

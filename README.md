@@ -47,10 +47,10 @@ brobridge answers both:
 
 | Package | npm name | What it is |
 | --- | --- | --- |
-| [`packages/core`](./packages/core) | `@brobridge/core` | Protocol: codec, mux, flow control, resume. Zero runtime deps, any JS runtime. **Implemented.** |
+| [`packages/core`](./packages/core) | `@brobridgejs/core` | Protocol: codec, mux, flow control, resume. Zero runtime deps, any JS runtime. **Implemented.** |
 | [`packages/server`](./packages/server) | `brobridge` | Node >= 20 and Bun host: listener, trust fence, token bootstrap, cookie auth. **Implemented.** |
-| [`packages/client`](./packages/client) | `@brobridge/client` | Browser client: reconnect, resume, typed calls, streams. No third-party runtime deps. **Implemented.** |
-| [`packages/adapters`](./packages/adapters) | `@brobridge/adapters` | Subpath adapters for `birpc`, oRPC and tRPC. **Implemented.** |
+| [`packages/client`](./packages/client) | `@brobridgejs/client` | Browser client: reconnect, resume, typed calls, streams. No third-party runtime deps. **Implemented.** |
+| [`packages/adapters`](./packages/adapters) | `@brobridgejs/adapters` | Subpath adapters for `birpc`, oRPC and tRPC. **Implemented.** |
 
 ## Quickstart
 
@@ -74,7 +74,7 @@ console.log(`open ${bridge.url}`); // http://127.0.0.1:52341/?bt=<one-time token
 
 ```ts
 // browser
-import { connect } from '@brobridge/client';
+import { connect } from '@brobridgejs/client';
 
 const bridge = await connect(location.href); // burns the token, keeps the cookie
 await bridge.call('demo.echo', 'hello'); // 'hello'
@@ -111,7 +111,7 @@ Bun covers the other half of the matrix:
 
 ```bash
 pnpm -F brobridge test:bun          # the Bun host
-pnpm -F @brobridge/client test:bun  # the client against a Bun host
+pnpm -F @brobridgejs/client test:bun  # the client against a Bun host
 ```
 
 Requires Node >= 20 and pnpm 11. Bun is needed for the Bun-tagged suites, and

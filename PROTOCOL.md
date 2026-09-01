@@ -1,8 +1,8 @@
 # brobridge wire protocol
 
 **Version:** 1
-**Status:** Normative. This document governs `@brobridge/core`,
-`brobridge` (server) and `@brobridge/client`. Implementation MUST NOT deviate;
+**Status:** Normative. This document governs `@brobridgejs/core`,
+`brobridge` (server) and `@brobridgejs/client`. Implementation MUST NOT deviate;
 a behaviour change requires an edit to this document in the same commit.
 
 The key words **MUST**, **MUST NOT**, **REQUIRED**, **SHALL**, **SHALL NOT**,
@@ -45,7 +45,7 @@ The model:
   normal case, an HTTP request/response pair in the fallback case (§10).
 - **Many logical streams** multiplexed over it, keyed by `streamId`.
 - The protocol is **symmetric**: both peers can open streams, send data,
-  grant credit and signal errors. `@brobridge/core` therefore implements one
+  grant credit and signal errors. `@brobridgejs/core` therefore implements one
   endpoint type used by both sides. Asymmetry exists only in the handshake
   (§6), where the browser is always the initiator, and in resume (§9), where
   only the server keeps a replay buffer.

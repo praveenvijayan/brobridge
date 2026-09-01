@@ -1,5 +1,5 @@
 /**
- * `@brobridge/adapters/trpc` — tRPC v11 over a bridge.
+ * `@brobridgejs/adapters/trpc` — tRPC v11 over a bridge.
  *
  * Queries and mutations ride brobridge's unary call surface, which means they
  * also work through the `POST /rpc` fallback when a WebSocket is blocked.
@@ -9,19 +9,19 @@
  *
  * ```ts
  * // host
- * import { mount } from '@brobridge/adapters/trpc';
+ * import { mount } from '@brobridgejs/adapters/trpc';
  * mount(bridge, appRouter);
  *
  * // browser
  * import { createTRPCClient } from '@trpc/client';
- * import { createTRPCLink } from '@brobridge/adapters/trpc';
+ * import { createTRPCLink } from '@brobridgejs/adapters/trpc';
  * const trpc = createTRPCClient<AppRouter>({ links: [createTRPCLink(bridgeClient, {})] });
  * ```
  *
  * @see https://trpc.io/docs/client/links
  * @packageDocumentation
  */
-import type { BridgeStream } from '@brobridge/core';
+import type { BridgeStream } from '@brobridgejs/core';
 import type { TRPCLink } from '@trpc/client';
 import { TRPCClientError } from '@trpc/client';
 import type { TransformerOptions } from '@trpc/client/unstable-internals';

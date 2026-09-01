@@ -9,7 +9,7 @@
  */
 import type { Bridge as HostBridge, BridgeOptions } from 'brobridge';
 import { createBridge } from 'brobridge';
-import { BridgeError, ErrorCode, ResumeFailedError, SnapshotRequiredError } from '@brobridge/core';
+import { BridgeError, ErrorCode, ResumeFailedError, SnapshotRequiredError } from '@brobridgejs/core';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { connect } from '../src/client.js';

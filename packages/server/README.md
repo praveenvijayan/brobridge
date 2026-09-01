@@ -2,7 +2,7 @@
 
 The host side of brobridge: an HTTP listener on loopback, the trust fence, the
 one-time launch token, cookie authentication, and a WebSocket wired into a
-`@brobridge/core` endpoint. One public API across Node >= 20 and Bun.
+`@brobridgejs/core` endpoint. One public API across Node >= 20 and Bun.
 
 Normative specs: [`PROTOCOL.md`](../../PROTOCOL.md),
 [`THREAT-MODEL.md`](../../THREAT-MODEL.md).
@@ -48,7 +48,7 @@ console.log(`open ${bridge.url}`); // http://127.0.0.1:52341/?bt=<one-time token
 process.on('SIGINT', () => void bridge.close());
 ```
 
-From the browser, `@brobridge/client` (Phase 4) does the rest. Until then the
+From the browser, `@brobridgejs/client` (Phase 4) does the rest. Until then the
 raw surface is: `GET /?bt=<token>` to mint the cookie, then a WebSocket to
 `/ws`, then the protocol in [`PROTOCOL.md`](../../PROTOCOL.md).
 

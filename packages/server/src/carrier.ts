@@ -1,6 +1,6 @@
 /**
  * The socket carrier: what turns a WebSocket into something
- * `@brobridge/core` can speak through.
+ * `@brobridgejs/core` can speak through.
  *
  * Core's {@link Carrier} interface is synchronous — `send(bytes): void` — so
  * the socket's own backpressure has to be absorbed here. That absorption is
@@ -8,7 +8,7 @@
  * amount of memory and then lose its connection, never an unbounded
  * userspace queue (`THREAT-MODEL.md` §5.10, last row).
  */
-import type { Carrier } from '@brobridge/core';
+import type { Carrier } from '@brobridgejs/core';
 
 /** How a write to the underlying socket went. */
 export type WriteOutcome =

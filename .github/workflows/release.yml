@@ -6,7 +6,7 @@
 # no changesets remain, so this runs the publish instead.
 #
 # Two preconditions are manual and outside this file:
-#   1. the `@brobridge` scope exists on npm and the account can publish it,
+#   1. the `@brobridgejs` scope exists on npm and the account can publish it,
 #   2. `NPM_TOKEN` — an automation token — is set in the repository secrets.
 name: Release
 

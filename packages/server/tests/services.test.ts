@@ -5,7 +5,7 @@
  * its own: a route name arrives from a browser tab, and a tab is remote code
  * however it was authenticated (`THREAT-MODEL.md` §8.4).
  */
-import { BridgeError, ErrorCode } from '@brobridge/core';
+import { BridgeError, ErrorCode } from '@brobridgejs/core';
 import { describe, expect, it } from 'vitest';
 
 import { ServiceRegistry } from '../src/services.js';

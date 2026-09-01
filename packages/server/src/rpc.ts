@@ -11,8 +11,8 @@
  * Streams and resume are *not* available here. The client is told so by name
  * rather than degraded silently (`PROTOCOL.md` §10.1).
  */
-import type { Frame } from '@brobridge/core';
-import { ErrorCode, FrameDecoder, FrameFlags, FrameType, ProtocolError, encodeFrame } from '@brobridge/core';
+import type { Frame } from '@brobridgejs/core';
+import { ErrorCode, FrameDecoder, FrameFlags, FrameType, ProtocolError, encodeFrame } from '@brobridgejs/core';
 
 import type { GatewayResponse } from './gateway.js';
 import type { RawHeader } from './trust.js';

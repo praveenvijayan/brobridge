@@ -1,5 +1,5 @@
 {
-  "name": "@brobridge/client",
+  "name": "@brobridgejs/client",
   "version": "0.1.0",
   "type": "module",
   "description": "brobridge browser client: reconnect, resume, typed calls and streams",
@@ -50,7 +50,7 @@
     "resume"
   ],
   "dependencies": {
-    "@brobridge/core": "workspace:^"
+    "@brobridgejs/core": "workspace:^"
   },
   "devDependencies": {
     "@types/ws": "^8.18.1",

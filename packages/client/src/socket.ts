@@ -1,13 +1,13 @@
 /**
  * The WebSocket carrier and its watchdog.
  *
- * `@brobridge/core` speaks to the outside world through a three-method
+ * `@brobridgejs/core` speaks to the outside world through a three-method
  * carrier; this module is the only place in the client that knows a
  * `WebSocket` exists. It also owns liveness: `PROTOCOL.md` §11 makes silence
  * longer than `heartbeatTimeoutMs` a dead connection, and the cheapest place
  * to notice silence is where the bytes arrive.
  */
-import type { Carrier } from '@brobridge/core';
+import type { Carrier } from '@brobridgejs/core';
 
 import { BridgeClientError } from './errors.js';
 import type { SocketFactory } from './types.js';

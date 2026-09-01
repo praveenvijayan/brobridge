@@ -9,7 +9,7 @@
  *
  * @packageDocumentation
  */
-import type { BridgeStream } from '@brobridge/core';
+import type { BridgeStream } from '@brobridgejs/core';
 
 import { decodeMessage, encodeUnknown, frameMessage, readMessages } from './messages.js';
 

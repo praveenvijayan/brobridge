@@ -1,5 +1,5 @@
 /**
- * `@brobridge/adapters/orpc` — oRPC over a brobridge stream.
+ * `@brobridgejs/adapters/orpc` — oRPC over a brobridge stream.
  *
  * oRPC already speaks a peer-to-peer message protocol for adapters that have
  * no HTTP under them: its message-port adapter. A brobridge duplex stream is
@@ -12,12 +12,12 @@
  *
  * ```ts
  * // host
- * import { mount } from '@brobridge/adapters/orpc';
+ * import { mount } from '@brobridgejs/adapters/orpc';
  * mount(bridge, router);
  *
  * // browser
  * import { createORPCClient } from '@orpc/client';
- * import { createORPCLink } from '@brobridge/adapters/orpc';
+ * import { createORPCLink } from '@brobridgejs/adapters/orpc';
  * const client: RouterClient<typeof router> = createORPCClient(await createORPCLink(bridgeClient));
  * ```
  *

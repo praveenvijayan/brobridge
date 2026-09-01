@@ -1,12 +1,12 @@
 /**
- * `@brobridge/client` — the browser client.
+ * `@brobridgejs/client` — the browser client.
  *
  * Standards only: a `WebSocket` and a `fetch`, both injectable but neither
  * shimmed. Zero third-party runtime dependencies; the protocol itself comes
- * from `@brobridge/core`, which runs unchanged in the browser.
+ * from `@brobridgejs/core`, which runs unchanged in the browser.
  *
  * ```ts
- * import { connect } from '@brobridge/client';
+ * import { connect } from '@brobridgejs/client';
  *
  * const bridge = await connect(location.href);
  * const host = await bridge.call<string>('files.read', '/etc/hostname');
@@ -60,5 +60,5 @@ export {
   ResumeFailedError,
   SnapshotRequiredError,
   StreamError,
-} from '@brobridge/core';
-export type { BridgeStream, OpenStreamOptions, StreamMode, StreamState } from '@brobridge/core';
+} from '@brobridgejs/core';
+export type { BridgeStream, OpenStreamOptions, StreamMode, StreamState } from '@brobridgejs/core';

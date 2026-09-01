@@ -1,7 +1,7 @@
 /**
  * Faults the client raises on its own, as opposed to those the wire carries.
  *
- * Protocol faults already have typed values in `@brobridge/core`
+ * Protocol faults already have typed values in `@brobridgejs/core`
  * (`StreamError`, `SnapshotRequiredError`, `ConnectionClosedError`,
  * `ResumeFailedError`) and are re-exported unchanged. What is left is the
  * handful of conditions that exist only on this side of the socket: a

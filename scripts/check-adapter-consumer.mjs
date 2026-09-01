@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * The consumer check for `@brobridge/adapters`.
+ * The consumer check for `@brobridgejs/adapters`.
  *
  * Subpath exports and peer dependencies are the two things a workspace hides:
  * inside the monorepo every import resolves through `node_modules/.pnpm`
@@ -26,11 +26,11 @@ import { createTRPCClient } from '@trpc/client';
 import { initTRPC } from '@trpc/server';
 import { z } from 'zod';
 
-import { connect } from '@brobridge/client';
+import { connect } from '@brobridgejs/client';
 import { createBridge } from 'brobridge';
-import { createBirpcLink, mount as mountBirpc } from '@brobridge/adapters/birpc';
-import { createORPCLink, mount as mountORPC } from '@brobridge/adapters/orpc';
-import { createTRPCLink, mount as mountTRPC } from '@brobridge/adapters/trpc';
+import { createBirpcLink, mount as mountBirpc } from '@brobridgejs/adapters/birpc';
+import { createORPCLink, mount as mountORPC } from '@brobridgejs/adapters/orpc';
+import { createTRPCLink, mount as mountTRPC } from '@brobridgejs/adapters/trpc';
 
 interface HostFunctions {
   add(a: number, b: number): number;
@@ -97,10 +97,10 @@ for (const pkg of PACKAGES) {
 const packed = readdirSync(tarballs).map((file) => join(tarballs, file));
 const overrides = {};
 for (const [name, file] of [
-  ['@brobridge/core', find(packed, 'brobridge-core-')],
+  ['@brobridgejs/core', find(packed, 'brobridge-core-')],
   ['brobridge', find(packed, /(^|\/)brobridge-\d/)],
-  ['@brobridge/client', find(packed, 'brobridge-client-')],
-  ['@brobridge/adapters', find(packed, 'brobridge-adapters-')],
+  ['@brobridgejs/client', find(packed, 'brobridge-client-')],
+  ['@brobridgejs/adapters', find(packed, 'brobridge-adapters-')],
 ]) {
   overrides[name] = `file:${file}`;
 }

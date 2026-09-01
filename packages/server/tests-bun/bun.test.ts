@@ -13,8 +13,8 @@ import { afterEach, describe, expect, it } from 'bun:test';
 
 import { createBridge } from '../src/index.js';
 import type { Bridge } from '../src/index.js';
-import { BridgeEndpoint } from '@brobridge/core';
-import type { Carrier } from '@brobridge/core';
+import { BridgeEndpoint } from '@brobridgejs/core';
+import type { Carrier } from '@brobridgejs/core';
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();

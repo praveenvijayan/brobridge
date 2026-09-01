@@ -1,7 +1,7 @@
 ---
-"@brobridge/adapters": patch
-"@brobridge/client": patch
-"@brobridge/core": patch
+"@brobridgejs/adapters": patch
+"@brobridgejs/client": patch
+"@brobridgejs/core": patch
 "brobridge": patch
 ---
 

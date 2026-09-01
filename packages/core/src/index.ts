@@ -1,5 +1,5 @@
 /**
- * `@brobridge/core` — the brobridge protocol implementation.
+ * `@brobridgejs/core` — the brobridge protocol implementation.
  *
  * This package is pure logic: frame codec, stream multiplexing, credit-based
  * flow control and resume. It owns no sockets and has zero runtime

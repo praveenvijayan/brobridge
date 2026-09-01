@@ -11,7 +11,7 @@ importers:
       '@arethetypeswrong/cli':
         specifier: ^0.18.2
         version: 0.18.5
-      '@brobridge/client':
+      '@brobridgejs/client':
         specifier: workspace:*
         version: link:packages/client
       '@changesets/cli':
@@ -47,11 +47,11 @@ importers:
 
   packages/adapters:
     dependencies:
-      '@brobridge/core':
+      '@brobridgejs/core':
         specifier: workspace:^
         version: link:../core
     devDependencies:
-      '@brobridge/client':
+      '@brobridgejs/client':
         specifier: workspace:^
         version: link:../client
       '@orpc/client':
@@ -84,7 +84,7 @@ importers:
 
   packages/client:
     dependencies:
-      '@brobridge/core':
+      '@brobridgejs/core':
         specifier: workspace:^
         version: link:../core
     devDependencies:
@@ -109,7 +109,7 @@ importers:
 
   packages/server:
     dependencies:
-      '@brobridge/core':
+      '@brobridgejs/core':
         specifier: workspace:^
         version: link:../core
       ws:

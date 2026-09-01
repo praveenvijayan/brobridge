@@ -35,8 +35,8 @@ brobridge is pre-1.0. Security fixes land on the latest minor release only.
 | 0.1.x | yes |
 | < 0.1 | no |
 
-The four packages — `@brobridge/core`, `brobridge`, `@brobridge/client` and
-`@brobridge/adapters` — are released together on one version.
+The four packages — `@brobridgejs/core`, `brobridge`, `@brobridgejs/client` and
+`@brobridgejs/adapters` — are released together on one version.
 
 ## What brobridge defends, in one page
 

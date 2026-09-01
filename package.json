@@ -1,5 +1,5 @@
 {
-  "name": "@brobridge/monorepo",
+  "name": "@brobridgejs/monorepo",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.2",
-    "@brobridge/client": "workspace:*",
+    "@brobridgejs/client": "workspace:*",
     "@changesets/cli": "^3.0.1",
     "@types/node": "^22.10.2",
     "@types/ws": "^8.18.1",
