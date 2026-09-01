@@ -338,10 +338,14 @@ function base64url(bytes: Uint8Array): string {
 /**
  * Decode base64url to exactly `length` bytes.
  *
- * Anything that does not decode, or decodes to the wrong length, yields a
- * zero-filled buffer of the right length rather than an early return: the
- * caller then still runs a full constant-time comparison, so malformed and
- * wrong are one timing class.
+ * Anything that does not decode, decodes to the wrong length, or is not the
+ * canonical spelling of its bytes yields a zero-filled buffer of the right
+ * length rather than an early return: the caller then still runs a full
+ * constant-time comparison, so malformed and wrong are one timing class.
+ *
+ * The canonical-spelling check closes base64 malleability: without it, a
+ * final character that differs only in the bits padding discards decodes to
+ * the same bytes, so more than one string presents as the same token.
  */
 function decodeFixed(text: string, length: number): Uint8Array {
   const out = new Uint8Array(length);
@@ -355,6 +359,10 @@ function decodeFixed(text: string, length: number): Uint8Array {
   }
   if (binary.length !== length) return out;
   for (let i = 0; i < length; i += 1) out[i] = binary.charCodeAt(i) & 0xff;
+  if (base64url(out) !== text) {
+    out.fill(0);
+    return out;
+  }
   return out;
 }
 

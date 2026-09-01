@@ -59,6 +59,13 @@ describe('the launch token', () => {
     // A near miss is still a miss.
     const flipped = `${guard.launchToken.slice(0, -1)}${guard.launchToken.endsWith('A') ? 'B' : 'A'}`;
     expect(guard.redeemToken(flipped).ok).toBe(false);
+    // A non-canonical spelling decodes to the same bytes — the final
+    // character's low bits fall in the padding base64 discards — and only the
+    // canonical spelling may redeem.
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+    const last = guard.launchToken.at(-1) as string;
+    const sibling = alphabet[alphabet.indexOf(last) ^ 1] as string;
+    expect(guard.redeemToken(`${guard.launchToken.slice(0, -1)}${sibling}`).ok).toBe(false);
     // None of that burnt it.
     expect(guard.redeemToken(guard.launchToken).ok).toBe(true);
   });
