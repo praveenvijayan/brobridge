@@ -1,5 +1,9 @@
 # brobridge
 
+[![CI](https://github.com/praveenvijayan/brobridge/actions/workflows/ci.yml/badge.svg)](https://github.com/praveenvijayan/brobridge/actions/workflows/ci.yml)
+[![node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](https://nodejs.org)
+[![license](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
+
 A secure, high-performance bridge between a local Node/Bun process and a
 browser tab.
 

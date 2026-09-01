@@ -26,7 +26,9 @@
     "publish:dry": "node scripts/check-publish.mjs",
     "check:readme": "node scripts/check-readme-examples.mjs",
     "bench": "node scripts/bench.mjs",
-    "verify": "pnpm build && pnpm test && pnpm publint && pnpm size && pnpm check:readme && pnpm check:consumer && pnpm publish:dry"
+    "bench:smoke": "node scripts/bench.mjs --smoke",
+    "check:engines": "node scripts/check-engines.mjs",
+    "verify": "pnpm build && pnpm test && pnpm check:engines && pnpm publint && pnpm size && pnpm check:readme && pnpm check:consumer && pnpm publish:dry"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.2",
