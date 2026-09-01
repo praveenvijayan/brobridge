@@ -268,6 +268,7 @@
     </a>
     <div class="nav-links">
       <a href="#why">Why</a>
+      <a href="#architecture">Architecture</a>
       <a href="#implement">Implement</a>
       <a href="#security">Security</a>
       <a href="#adapters">Adapters</a>
@@ -350,6 +351,133 @@
       and a one-time launch token that mints a signed session cookie.
       Each check is written down in the threat model, attack by attack.
     </p>
+  </div>
+</section>
+
+<!-- ================= ARCHITECTURE ================= -->
+<section id="architecture">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">System view</p>
+      <h2 class="display-lg">One socket. One fence.</h2>
+      <p>
+        The diagram shows the whole system. Your code sits at the two ends.
+        brobridge owns the fence and the wire between them.
+      </p>
+    </div>
+
+    <div style="overflow-x: auto;">
+      <svg viewBox="0 0 960 600" role="img" aria-labelledby="arch-title arch-desc"
+           style="min-width: 760px; width: 100%; display: block; font-family: var(--font);">
+        <title id="arch-title">brobridge high-level architecture</title>
+        <desc id="arch-desc">Your services in a local host process talk to your tab over one multiplexed WebSocket through the brobridge trust fence, while every other page in the browser is refused.</desc>
+        <defs>
+          <marker id="ar-muted" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#969696"/>
+          </marker>
+          <marker id="ar-ink" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#ffffff"/>
+          </marker>
+          <marker id="ar-ink-rev" markerWidth="8" markerHeight="6" refX="1" refY="3" orient="auto">
+            <polygon points="8 0, 0 3, 8 6" fill="#ffffff"/>
+          </marker>
+          <marker id="ar-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#da291c"/>
+          </marker>
+        </defs>
+
+        <!-- bg -->
+        <rect width="100%" height="100%" fill="#181818"/>
+
+        <!-- zones -->
+        <rect x="32" y="64" width="336" height="288" rx="8" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.10)" stroke-width="0.8"/>
+        <rect x="44" y="68" width="180" height="12" fill="#181818"/>
+        <text x="52" y="77" fill="#666666" font-size="7" font-family="var(--mono)" letter-spacing="0.14em">YOUR HOST PROCESS · NODE / BUN</text>
+
+        <rect x="592" y="64" width="336" height="288" rx="8" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.10)" stroke-width="0.8"/>
+        <rect x="604" y="68" width="188" height="12" fill="#181818"/>
+        <text x="612" y="77" fill="#666666" font-size="7" font-family="var(--mono)" letter-spacing="0.14em">YOUR TAB · SAME ORIGIN + COOKIE</text>
+
+        <rect x="592" y="384" width="336" height="136" rx="8" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.10)" stroke-width="0.8"/>
+        <rect x="604" y="388" width="192" height="12" fill="#181818"/>
+        <text x="612" y="397" fill="#666666" font-size="7" font-family="var(--mono)" letter-spacing="0.14em">EVERY OTHER PAGE IN THE BROWSER</text>
+
+        <!-- arrows (before boxes) -->
+        <!-- services -> server -->
+        <line x1="200" y1="192" x2="200" y2="240" stroke="#969696" stroke-width="1.2" marker-end="url(#ar-muted)"/>
+        <!-- UI -> client, label to the right of the vertical segment -->
+        <line x1="760" y1="192" x2="760" y2="240" stroke="#969696" stroke-width="1.2" marker-end="url(#ar-muted)"/>
+        <rect x="772" y="204" width="100" height="12" fill="#181818"/>
+        <text x="776" y="213" fill="#969696" font-size="8" font-family="var(--mono)" letter-spacing="0.06em">CALL / OPENSTREAM</text>
+        <!-- the wire: one duplex websocket -->
+        <line x1="336" y1="284" x2="624" y2="284" stroke="#ffffff" stroke-width="1.2" marker-start="url(#ar-ink-rev)" marker-end="url(#ar-ink)"/>
+        <rect x="428" y="260" width="104" height="12" fill="#181818"/>
+        <text x="480" y="269" fill="#ffffff" font-size="8" font-family="var(--mono)" text-anchor="middle" letter-spacing="0.06em">ONE WEBSOCKET</text>
+        <rect x="432" y="294" width="96" height="12" fill="#181818"/>
+        <text x="480" y="303" fill="#969696" font-size="8" font-family="var(--mono)" text-anchor="middle" letter-spacing="0.06em">MUX · RESUME</text>
+        <!-- refused cross-origin request -->
+        <path d="M 624,456 H 208 Q 200,456 200,448 V 328"
+              fill="none" stroke="#da291c" stroke-width="1" stroke-dasharray="4,3" opacity="0.9" marker-end="url(#ar-accent)"/>
+        <rect x="384" y="432" width="64" height="12" fill="#181818"/>
+        <text x="416" y="441" fill="#da291c" font-size="8" font-family="var(--mono)" text-anchor="middle" letter-spacing="0.06em">REFUSED</text>
+
+        <!-- node: your services -->
+        <rect x="64" y="112" width="272" height="80" rx="6" fill="#181818"/>
+        <rect x="64" y="112" width="272" height="80" rx="6" fill="rgba(255,255,255,0.00)" stroke="#ffffff" stroke-width="1"/>
+        <rect x="72" y="120" width="32" height="12" rx="2" fill="transparent" stroke="rgba(255,255,255,0.40)" stroke-width="0.8"/>
+        <text x="88" y="129" fill="rgba(255,255,255,0.80)" font-size="7" font-family="var(--mono)" text-anchor="middle" letter-spacing="0.08em">APP</text>
+        <text x="200" y="156" fill="#ffffff" font-size="12" font-weight="600" text-anchor="middle">Your services</text>
+        <text x="200" y="174" fill="#969696" font-size="9" font-family="var(--mono)" text-anchor="middle">expose(…) · stream(…)</text>
+
+        <!-- node: brobridge server (focal) -->
+        <rect x="64" y="240" width="272" height="88" rx="6" fill="#181818"/>
+        <rect x="64" y="240" width="272" height="88" rx="6" fill="rgba(218,41,28,0.08)" stroke="#da291c" stroke-width="1"/>
+        <rect x="72" y="248" width="96" height="12" rx="2" fill="transparent" stroke="rgba(218,41,28,0.50)" stroke-width="0.8"/>
+        <text x="120" y="257" fill="rgba(255,255,255,0.80)" font-size="7" font-family="var(--mono)" text-anchor="middle" letter-spacing="0.08em">NPM: BROBRIDGE</text>
+        <text x="200" y="282" fill="#ffffff" font-size="12" font-weight="600" text-anchor="middle">brobridge server</text>
+        <text x="200" y="300" fill="#969696" font-size="9" font-family="var(--mono)" text-anchor="middle">trust fence: Host · Origin · cookie</text>
+        <text x="200" y="314" fill="#969696" font-size="9" font-family="var(--mono)" text-anchor="middle">binds 127.0.0.1</text>
+
+        <!-- node: your UI -->
+        <rect x="624" y="112" width="272" height="80" rx="6" fill="#181818"/>
+        <rect x="624" y="112" width="272" height="80" rx="6" fill="rgba(255,255,255,0.00)" stroke="#ffffff" stroke-width="1"/>
+        <rect x="632" y="120" width="32" height="12" rx="2" fill="transparent" stroke="rgba(255,255,255,0.40)" stroke-width="0.8"/>
+        <text x="648" y="129" fill="rgba(255,255,255,0.80)" font-size="7" font-family="var(--mono)" text-anchor="middle" letter-spacing="0.08em">APP</text>
+        <text x="760" y="156" fill="#ffffff" font-size="12" font-weight="600" text-anchor="middle">Your UI</text>
+        <text x="760" y="174" fill="#969696" font-size="9" font-family="var(--mono)" text-anchor="middle">birpc / oRPC / tRPC · or raw calls</text>
+
+        <!-- node: bridge client -->
+        <rect x="624" y="240" width="272" height="88" rx="6" fill="#181818"/>
+        <rect x="624" y="240" width="272" height="88" rx="6" fill="rgba(255,255,255,0.00)" stroke="#ffffff" stroke-width="1"/>
+        <rect x="632" y="248" width="140" height="12" rx="2" fill="transparent" stroke="rgba(255,255,255,0.40)" stroke-width="0.8"/>
+        <text x="702" y="257" fill="rgba(255,255,255,0.80)" font-size="7" font-family="var(--mono)" text-anchor="middle" letter-spacing="0.08em">NPM: @BROBRIDGE/CLIENT</text>
+        <text x="760" y="282" fill="#ffffff" font-size="12" font-weight="600" text-anchor="middle">Bridge client</text>
+        <text x="760" y="300" fill="#969696" font-size="9" font-family="var(--mono)" text-anchor="middle">reconnect · resume · backpressure</text>
+        <text x="760" y="314" fill="#969696" font-size="9" font-family="var(--mono)" text-anchor="middle">no third-party deps</text>
+
+        <!-- node: any other page -->
+        <rect x="624" y="416" width="272" height="80" rx="6" fill="#181818"/>
+        <rect x="624" y="416" width="272" height="80" rx="6" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.30)" stroke-width="1"/>
+        <rect x="632" y="424" width="32" height="12" rx="2" fill="transparent" stroke="rgba(255,255,255,0.30)" stroke-width="0.8"/>
+        <text x="648" y="433" fill="rgba(255,255,255,0.60)" font-size="7" font-family="var(--mono)" text-anchor="middle" letter-spacing="0.08em">WEB</text>
+        <text x="760" y="460" fill="#ffffff" font-size="12" font-weight="600" text-anchor="middle">any-site.example</text>
+        <text x="760" y="478" fill="#969696" font-size="9" font-family="var(--mono)" text-anchor="middle">no token · wrong origin</text>
+
+        <!-- legend -->
+        <line x1="32" y1="548" x2="928" y2="548" stroke="rgba(255,255,255,0.10)" stroke-width="0.8"/>
+        <text x="32" y="572" fill="#666666" font-size="8" font-family="var(--mono)" letter-spacing="0.14em">LEGEND</text>
+        <rect x="120" y="560" width="16" height="12" rx="2" fill="none" stroke="#ffffff" stroke-width="1"/>
+        <text x="144" y="570" fill="#969696" font-size="8" font-family="var(--mono)" letter-spacing="0.06em">APP CODE</text>
+        <rect x="232" y="560" width="16" height="12" rx="2" fill="rgba(218,41,28,0.08)" stroke="#da291c" stroke-width="1"/>
+        <text x="256" y="570" fill="#969696" font-size="8" font-family="var(--mono)" letter-spacing="0.06em">TRUST FENCE</text>
+        <rect x="376" y="560" width="16" height="12" rx="2" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.30)" stroke-width="1"/>
+        <text x="400" y="570" fill="#969696" font-size="8" font-family="var(--mono)" letter-spacing="0.06em">OTHER PAGE</text>
+        <line x1="524" y1="566" x2="548" y2="566" stroke="#ffffff" stroke-width="1.2"/>
+        <text x="556" y="570" fill="#969696" font-size="8" font-family="var(--mono)" letter-spacing="0.06em">MULTIPLEXED SOCKET</text>
+        <line x1="712" y1="566" x2="736" y2="566" stroke="#da291c" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="744" y="570" fill="#969696" font-size="8" font-family="var(--mono)" letter-spacing="0.06em">REFUSED CROSS-ORIGIN</text>
+      </svg>
+    </div>
   </div>
 </section>
 
