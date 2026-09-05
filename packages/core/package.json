@@ -1,6 +1,6 @@
 {
   "name": "@brobridgejs/core",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "module",
   "description": "brobridge protocol core: frame codec, stream multiplexing, credit flow control, resume",
   "license": "MIT",

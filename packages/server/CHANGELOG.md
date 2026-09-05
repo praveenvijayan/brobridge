@@ -1,5 +1,16 @@
 # brobridge
 
+## 0.2.1
+
+### Patch Changes
+
+- Republish with a resolvable `@brobridgejs/core` dependency. The 0.2.0 tarball
+  was produced by the npm CLI, which does not rewrite `workspace:^`, so the
+  published manifest could not be installed outside this repository. The source
+  is unchanged; this release goes out through pnpm, which rewrites the specifier
+  to a real range.
+- @brobridgejs/core@0.2.1
+
 ## 0.2.0
 
 ### Minor Changes
