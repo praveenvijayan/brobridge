@@ -13,7 +13,7 @@ import { describe, expect, it } from 'vitest';
 import {
   AuthGuard,
   SESSION_COOKIE_ATTRIBUTES,
-  SESSION_COOKIE_NAME,
+  sessionCookieName,
   readCookie,
   timingSafeEqual,
 } from '../src/auth.js';
@@ -27,6 +27,9 @@ const BASE = {
 };
 
 /** A guard with a clock the test drives. */
+/** The cookie name for `BASE.authority`. */
+const COOKIE = sessionCookieName(BASE.authority);
+
 async function guardAt(clock: { now: number }, overrides: Partial<typeof BASE> = {}) {
   return AuthGuard.create({ ...BASE, ...overrides, now: () => clock.now });
 }
@@ -100,11 +103,31 @@ describe('the session cookie', () => {
     if (!redeemed.ok) return;
 
     const setCookie = await guard.cookieFor(redeemed.sessionId);
-    expect(setCookie.startsWith(`${SESSION_COOKIE_NAME}=`)).toBe(true);
+    expect(setCookie.startsWith(`${COOKIE}=`)).toBe(true);
     expect(setCookie.endsWith(`; ${SESSION_COOKIE_ATTRIBUTES}`)).toBe(true);
     expect(SESSION_COOKIE_ATTRIBUTES).toBe('HttpOnly; SameSite=Strict; Path=/');
     // Deliberately not `Secure`: the bootstrap URL is plain http on loopback.
     expect(setCookie).not.toContain('Secure');
+  });
+
+  it('names the cookie for the port, so bridges on one host keep separate sessions (§5.8)', async () => {
+    expect(sessionCookieName('127.0.0.1:7777')).toBe('bb_session_7777');
+    expect(sessionCookieName('[::1]:7777')).toBe('bb_session_7777');
+
+    // One jar, two bridges: each finds its own cookie beside the other's.
+    const clock = { now: 1_000 };
+    const here = await guardAt(clock);
+    const there = await guardAt(clock, { authority: '127.0.0.1:7778' });
+    const mine = here.redeemToken(here.launchToken);
+    const theirs = there.redeemToken(there.launchToken);
+    if (!mine.ok || !theirs.ok) throw new Error('tokens should have redeemed');
+    const jar = [await here.cookieFor(mine.sessionId), await there.cookieFor(theirs.sessionId)]
+      .map((setCookie) => setCookie.split(';')[0] ?? '')
+      .join('; ');
+    expect(jar).toContain('bb_session_7777=');
+    expect(jar).toContain('bb_session_7778=');
+    expect((await here.verifyCookie(jar)).ok).toBe(true);
+    expect((await there.verifyCookie(jar)).ok).toBe(true);
   });
 
   it('verifies the cookie it minted', async () => {
@@ -126,7 +149,7 @@ describe('the session cookie', () => {
     const redeemed = guard.redeemToken(guard.launchToken);
     if (!redeemed.ok) throw new Error('token should have redeemed');
     const cookie = cookieHeader(await guard.cookieFor(redeemed.sessionId));
-    const [id, issuedAt, mac] = (readCookie(cookie, SESSION_COOKIE_NAME) as string).split('.') as [
+    const [id, issuedAt, mac] = (readCookie(cookie, COOKIE) as string).split('.') as [
       string,
       string,
       string,
@@ -138,13 +161,13 @@ describe('the session cookie', () => {
       `${text.startsWith('A') ? 'B' : 'A'}${text.slice(1)}`;
 
     for (const forged of [
-      `${SESSION_COOKIE_NAME}=${id}.${issuedAt}.${swap(mac)}`,
-      `${SESSION_COOKIE_NAME}=${swap(id)}.${issuedAt}.${mac}`,
-      `${SESSION_COOKIE_NAME}=${id}.${String(Number(issuedAt) + 1)}.${mac}`,
-      `${SESSION_COOKIE_NAME}=${id}.${issuedAt}`,
-      `${SESSION_COOKIE_NAME}=${id}.${issuedAt}.${mac}.extra`,
-      `${SESSION_COOKIE_NAME}=`,
-      `${SESSION_COOKIE_NAME}=....`,
+      `${COOKIE}=${id}.${issuedAt}.${swap(mac)}`,
+      `${COOKIE}=${swap(id)}.${issuedAt}.${mac}`,
+      `${COOKIE}=${id}.${String(Number(issuedAt) + 1)}.${mac}`,
+      `${COOKIE}=${id}.${issuedAt}`,
+      `${COOKIE}=${id}.${issuedAt}.${mac}.extra`,
+      `${COOKIE}=`,
+      `${COOKIE}=....`,
     ]) {
       const outcome = await guard.verifyCookie(forged);
       expect(outcome.ok, forged).toBe(false);
@@ -161,9 +184,13 @@ describe('the session cookie', () => {
 
     const redeemed = there.redeemToken(there.launchToken);
     if (!redeemed.ok) throw new Error('token should have redeemed');
+    // Under its own name the foreign cookie is simply not this bridge's
+    // (`absent`). Relabelled under this bridge's name — what a hostile local
+    // writer would do — it is the MAC that refuses it.
     const foreign = cookieHeader(await there.cookieFor(redeemed.sessionId));
-
-    await expect(here.verifyCookie(foreign)).resolves.toEqual({ ok: false, reason: 'mismatch' });
+    await expect(here.verifyCookie(foreign)).resolves.toEqual({ ok: false, reason: 'absent' });
+    const relabelled = foreign.replace(sessionCookieName('127.0.0.1:7778'), COOKIE);
+    await expect(here.verifyCookie(relabelled)).resolves.toEqual({ ok: false, reason: 'mismatch' });
   });
 
   it('refuses a cookie whose session was revoked, and one that aged out', async () => {

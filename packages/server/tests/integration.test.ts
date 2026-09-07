@@ -13,7 +13,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { createBridge } from '../src/index.js';
 import type { Bridge } from '../src/index.js';
-import { SESSION_COOKIE_NAME } from '../src/auth.js';
+import { sessionCookieName } from '../src/auth.js';
 import { RPC_CONTENT_TYPE } from '../src/rpc.js';
 import {
   args,
@@ -74,7 +74,7 @@ describe('bootstrap', () => {
     expect(first.response.headers.get('referrer-policy')).toBe('no-referrer');
     expect(first.response.headers.get('cache-control')).toBe('no-store');
     const setCookie = first.response.headers.get('set-cookie') ?? '';
-    expect(setCookie).toContain(`${SESSION_COOKIE_NAME}=`);
+    expect(setCookie).toContain(`${sessionCookieName(new URL(bridge.url).host)}=`);
     expect(setCookie).toContain('HttpOnly');
     expect(setCookie).toContain('SameSite=Strict');
     expect(setCookie).toContain('Path=/');

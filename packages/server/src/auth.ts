@@ -11,8 +11,23 @@
  * @see THREAT-MODEL.md §7 "Authentication, precisely"
  */
 
-/** The cookie the bridge mints and requires. */
-export const SESSION_COOKIE_NAME = 'bb_session';
+/** What the session cookie's name starts with; see {@link sessionCookieName}. */
+export const SESSION_COOKIE_PREFIX = 'bb_session';
+
+/**
+ * The cookie the bridge mints and requires, named for the port it is bound to.
+ *
+ * Browsers keep one cookie jar per host, not per port (`THREAT-MODEL.md`
+ * §5.8): every bridge on `127.0.0.1` shares it. Two bridges that both set a
+ * cookie called `bb_session` take turns overwriting each other, and a host
+ * application that runs several — a launcher and the applications it starts —
+ * logs each out as the next one opens. Naming the cookie for the port keeps
+ * them side by side. The MAC still binds the value to the exact authority, so
+ * a cookie under this name written by anything else is inert.
+ */
+export function sessionCookieName(authority: string): string {
+  return `${SESSION_COOKIE_PREFIX}_${authority.slice(authority.lastIndexOf(':') + 1)}`;
+}
 
 /**
  * The cookie attributes, exactly as `THREAT-MODEL.md` §7.1 specifies.
@@ -201,7 +216,7 @@ export class AuthGuard {
    * tests and local diagnostics and never reaches the wire.
    */
   async verifyCookie(cookieHeader: string | undefined): Promise<AuthOutcome> {
-    const value = readCookie(cookieHeader, SESSION_COOKIE_NAME);
+    const value = readCookie(cookieHeader, sessionCookieName(this.#authority));
     if (value === undefined) return fail('absent');
 
     const parts = value.split('.');
@@ -233,7 +248,7 @@ export class AuthGuard {
     const issuedAt = this.#sessions.get(sessionId) ?? this.#now();
     const mac = await this.#sign(sessionId, issuedAt);
     const value = `${sessionId}.${String(issuedAt)}.${base64url(mac)}`;
-    return `${SESSION_COOKIE_NAME}=${value}; ${SESSION_COOKIE_ATTRIBUTES}`;
+    return `${sessionCookieName(this.#authority)}=${value}; ${SESSION_COOKIE_ATTRIBUTES}`;
   }
 
   /** Whether `remote` has spent its failure budget for the current window. */

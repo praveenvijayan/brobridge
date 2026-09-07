@@ -307,6 +307,13 @@ The residual effect — a hostile local writer can *overwrite* the legitimate
 cookie and break the user's session — is a denial of service against a local
 application by a process that already runs locally. See §8.1.
 
+The cookie is named for the port (`bb_session_<port>`) so that the jar's
+port-blindness does not turn *cooperating* bridges into that hostile writer.
+A host application that runs several bridges on one loopback host — a launcher
+and the applications it starts — would otherwise see each one's bootstrap
+overwrite the last one's cookie and log its tab out. Distinct names sit side by
+side in the jar; the MAC still refuses each bridge's cookie everywhere else.
+
 **Enforced by.** `brobridge` — `auth.ts`, MAC covers `{sessionId, authority,
 issuedAt}`; per-instance key from `crypto.getRandomValues`; a test mints a
 cookie under a different authority and asserts `403`.
@@ -491,7 +498,7 @@ re-checked against this table.
 3. The first request presenting a valid, unburned, unexpired token — and only
    after passing the fence — burns it atomically, mints a session, and answers
    `303 See Other` with `Location: /`,
-   `Set-Cookie: bb_session=<value>; HttpOnly; SameSite=Strict; Path=/`,
+   `Set-Cookie: bb_session_<port>=<value>; HttpOnly; SameSite=Strict; Path=/`,
    `Referrer-Policy: no-referrer` and `Cache-Control: no-store`.
 4. Any later presentation of that token is refused `403`.
 

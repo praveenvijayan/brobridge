@@ -198,14 +198,17 @@ describe('the attack catalogue against a live listener', () => {
     const bridge = await startBridge();
     const { cookie } = await bootstrap(bridge.url);
     const authority = `127.0.0.1:${String(bridge.port)}`;
-    const value = cookie.slice('bb_session='.length);
+    const name = `bb_session_${String(bridge.port)}`;
+    const value = cookie.slice(`${name}=`.length);
 
     for (const forged of [
-      'bb_session=forged',
-      'bb_session=a.b.c',
-      `bb_session=${value.split('.')[0] ?? ''}.0.${value.split('.')[2] ?? ''}`,
-      `bb_session=${value}x`,
-      'bb_session=',
+      `${name}=forged`,
+      `${name}=a.b.c`,
+      `${name}=${value.split('.')[0] ?? ''}.0.${value.split('.')[2] ?? ''}`,
+      `${name}=${value}x`,
+      `${name}=`,
+      // The old, port-less name: the cookie another bridge on this host mints.
+      `bb_session=${value}`,
     ]) {
       const response = await raw(
         bridge.port,
@@ -220,7 +223,7 @@ describe('the attack catalogue against a live listener', () => {
     const authority = `127.0.0.1:${String(bridge.port)}`;
 
     const responses = await Promise.all(
-      ['', 'Cookie: bb_session=garbage\n', 'Cookie: bb_session=a.1.b\n'].map(async (header) =>
+      ['', 'Cookie: bb_session_1=garbage\n', `Cookie: bb_session_${String(bridge.port)}=a.1.b\n`].map(async (header) =>
         raw(bridge.port, `GET / HTTP/1.1\nHost: ${authority}\n${header}Connection: close\n\n`),
       ),
     );

@@ -31,7 +31,7 @@ import type { HostListener, RuntimeConfig } from './runtime.js';
 import { isBun } from './runtime.js';
 import { formatAuthority, originOf } from './trust.js';
 
-export { LAUNCH_TOKEN_PARAM, SESSION_COOKIE_ATTRIBUTES, SESSION_COOKIE_NAME } from './auth.js';
+export { LAUNCH_TOKEN_PARAM, SESSION_COOKIE_ATTRIBUTES, SESSION_COOKIE_PREFIX, sessionCookieName } from './auth.js';
 export type { BridgeSession } from './manager.js';
 export type { BridgeLogger, BridgeOptions, IndexDocument } from './options.js';
 export { isLoopbackHost } from './options.js';
