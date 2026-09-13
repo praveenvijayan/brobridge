@@ -1,5 +1,11 @@
 # @brobridgejs/adapters
 
+## 0.2.2
+
+### Patch Changes
+
+- @brobridgejs/core@0.2.2
+
 ## 0.2.1
 
 ### Patch Changes

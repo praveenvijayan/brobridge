@@ -1,6 +1,6 @@
 {
   "name": "brobridge",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "type": "module",
   "description": "brobridge server: Node and Bun host with trust fence, token bootstrap and cookie auth",
   "license": "MIT",
