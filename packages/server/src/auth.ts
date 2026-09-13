@@ -89,6 +89,22 @@ const NUL = '\u0000';
  */
 const MAX_TRACKED_REMOTES = 4096;
 
+/**
+ * Launch tokens a guard holds live at once.
+ *
+ * A host may mint more than the first — to let a person back into an
+ * application from somewhere else on the machine — but each is minted on the
+ * host's own decision. The cap keeps a host that mints in a loop from
+ * growing an unbounded set of live credentials: the ninth drops the oldest.
+ */
+export const MAX_LIVE_LAUNCH_TOKENS = 8;
+
+/** One launch token: its bytes until burnt, and when it was minted. */
+interface LaunchToken {
+  bytes: Uint8Array | null;
+  readonly issuedAt: number;
+}
+
 interface FailureWindow {
   windowStart: number;
   failures: number;
@@ -111,9 +127,14 @@ export class AuthGuard {
   readonly #sessions = new Map<string, number>();
   readonly #failures = new Map<string, FailureWindow>();
 
-  #tokenBytes: Uint8Array | null;
-  readonly #tokenIssuedAt: number;
+  /** Live launch tokens, oldest first. Burnt, expired or dropped ones leave. */
+  #tokens: LaunchToken[] = [];
+  /** The token minted with the guard, which `launchToken` names. */
+  readonly #first: LaunchToken;
   readonly #launchToken: string;
+  /** Whether any token has left the live set, for the `spent` diagnostic. */
+  #retiredAny = false;
+  #cleared = false;
 
   private constructor(options: AuthGuardOptions, key: SigningKey, token: Uint8Array) {
     this.#authority = options.authority;
@@ -123,9 +144,9 @@ export class AuthGuard {
     this.#failuresPerWindow = options.authFailuresPerWindow;
     this.#now = options.now ?? Date.now;
     this.#key = key;
-    this.#tokenBytes = token;
+    this.#first = { bytes: token, issuedAt: this.#now() };
+    this.#tokens.push(this.#first);
     this.#launchToken = base64url(token);
-    this.#tokenIssuedAt = this.#now();
   }
 
   /**
@@ -145,14 +166,33 @@ export class AuthGuard {
     return new AuthGuard(options, key, randomBytes(TOKEN_BYTES));
   }
 
-  /** The launch token, for the `?bt=` bootstrap URL. Never log this. */
+  /** The first launch token, for the `?bt=` bootstrap URL. Never log this. */
   get launchToken(): string {
     return this.#launchToken;
   }
 
-  /** True once the token has been burnt by a valid presentation. */
+  /** True once the first token has been burnt, has expired or was dropped. */
   get tokenSpent(): boolean {
-    return this.#tokenBytes === null;
+    return this.#first.bytes === null;
+  }
+
+  /**
+   * Mint one more launch token, single-use, with its own validity window.
+   *
+   * Only the host calls this, on its own decision; nothing a browser sends
+   * reaches it. At most {@link MAX_LIVE_LAUNCH_TOKENS} are live: minting past
+   * the cap drops the oldest. Never log the result.
+   */
+  mintLaunchToken(): string {
+    if (this.#cleared) throw new Error('brobridge: the bridge is closed; no launch token was minted');
+    const bytes = randomBytes(TOKEN_BYTES);
+    const text = base64url(bytes);
+    this.#tokens.push({ bytes, issuedAt: this.#now() });
+    while (this.#tokens.length > MAX_LIVE_LAUNCH_TOKENS) {
+      const oldest = this.#tokens.shift();
+      if (oldest !== undefined) this.#retire(oldest);
+    }
+    return text;
   }
 
   /** Sessions this guard currently recognises. */
@@ -169,26 +209,35 @@ export class AuthGuard {
    * is already spent (`THREAT-MODEL.md` §5.6). Comparison is constant time
    * over fixed-length inputs, and a wrong length still pays for a full
    * comparison so length is not an oracle.
+   *
+   * With several live tokens the presentation is compared against every one,
+   * each in constant time, and a match burns exactly that token. Expired
+   * tokens leave the live set on this call.
    */
   redeemToken(presented: string | undefined): AuthOutcome {
     if (presented === undefined || presented === '') return fail('absent');
-    const expected = this.#tokenBytes;
-    if (expected === null) {
+    const offered = decodeFixed(presented, TOKEN_BYTES);
+    if (this.#tokens.length === 0) {
       // Still compare, against a decoy, so a spent token and a wrong token
       // cost the same.
-      timingSafeEqual(decodeFixed(presented, TOKEN_BYTES), new Uint8Array(TOKEN_BYTES));
+      timingSafeEqual(offered, new Uint8Array(TOKEN_BYTES));
       return fail('spent');
     }
-    const offered = decodeFixed(presented, TOKEN_BYTES);
-    const matches = timingSafeEqual(offered, expected);
-    if (!matches) return fail('mismatch');
-    if (this.#now() - this.#tokenIssuedAt > this.#launchTokenTtlMs) {
-      this.#tokenBytes = null;
-      expected.fill(0);
-      return fail('expired');
+    const now = this.#now();
+    let match: LaunchToken | undefined;
+    for (const token of this.#tokens) {
+      // No early exit: every live token pays for its comparison.
+      if (token.bytes !== null && timingSafeEqual(offered, token.bytes)) match = token;
     }
-    expected.fill(0);
-    this.#tokenBytes = null;
+    const expired = match !== undefined && now - match.issuedAt > this.#launchTokenTtlMs;
+    if (match !== undefined) this.#retire(match);
+    this.#tokens = this.#tokens.filter((token) => {
+      if (token.bytes !== null && now - token.issuedAt <= this.#launchTokenTtlMs) return true;
+      this.#retire(token);
+      return false;
+    });
+    if (match === undefined) return fail(this.#retiredAny ? 'spent' : 'mismatch');
+    if (expired) return fail('expired');
     return { ok: true, sessionId: this.#mintSession() };
   }
 
@@ -274,8 +323,16 @@ export class AuthGuard {
   clear(): void {
     this.#sessions.clear();
     this.#failures.clear();
-    this.#tokenBytes?.fill(0);
-    this.#tokenBytes = null;
+    for (const token of this.#tokens) this.#retire(token);
+    this.#tokens = [];
+    this.#cleared = true;
+  }
+
+  /** Burn one token: zero its bytes and mark it gone. */
+  #retire(token: LaunchToken): void {
+    token.bytes?.fill(0);
+    token.bytes = null;
+    this.#retiredAny = true;
   }
 
   #mintSession(): string {

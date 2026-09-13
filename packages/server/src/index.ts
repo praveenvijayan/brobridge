@@ -31,7 +31,12 @@ import type { HostListener, RuntimeConfig } from './runtime.js';
 import { isBun } from './runtime.js';
 import { formatAuthority, originOf } from './trust.js';
 
-export { LAUNCH_TOKEN_PARAM, SESSION_COOKIE_ATTRIBUTES, SESSION_COOKIE_NAME } from './auth.js';
+export {
+  LAUNCH_TOKEN_PARAM,
+  MAX_LIVE_LAUNCH_TOKENS,
+  SESSION_COOKIE_ATTRIBUTES,
+  SESSION_COOKIE_NAME,
+} from './auth.js';
 export type { BridgeSession } from './manager.js';
 export type { BridgeLogger, BridgeOptions, IndexDocument } from './options.js';
 export { isLoopbackHost } from './options.js';
@@ -55,6 +60,16 @@ export interface Bridge {
    * the token in it is a credential until it is burnt.
    */
   readonly url: string;
+  /**
+   * A fresh URL carrying a new one-time launch token, for opening the
+   * application again from somewhere else.
+   *
+   * Each call mints a token of its own, single-use, valid for
+   * `launchTokenTtlMs`; at most eight are live at once and a ninth drops the
+   * oldest. Call it only on the host's own decision — never because a browser
+   * asked. Do not log the result.
+   */
+  launchUrl(): string;
   /** The bridge's origin, without the token. */
   readonly origin: string;
   /** The bound authority, exactly as a legitimate `Host` header spells it. */
@@ -143,6 +158,7 @@ export async function createBridge(options: BridgeOptions = {}): Promise<Bridge>
   let closed = false;
   return {
     url: `${originOf(authority)}/?bt=${auth.launchToken}`,
+    launchUrl: () => `${originOf(authority)}/?bt=${auth.mintLaunchToken()}`,
     origin: originOf(authority),
     authority,
     host: listener.host,

@@ -12,6 +12,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   AuthGuard,
+  MAX_LIVE_LAUNCH_TOKENS,
   SESSION_COOKIE_ATTRIBUTES,
   SESSION_COOKIE_NAME,
   readCookie,
@@ -88,6 +89,72 @@ describe('the launch token', () => {
       seen.add(guard.launchToken);
     }
     expect(seen.size).toBe(16);
+  });
+});
+
+describe('more than one launch token', () => {
+  it('mints distinct tokens that each redeem once, independently', async () => {
+    const clock = { now: 1_000 };
+    const guard = await guardAt(clock);
+    const second = guard.mintLaunchToken();
+    const third = guard.mintLaunchToken();
+    expect(new Set([guard.launchToken, second, third]).size).toBe(3);
+    expect(second.length).toBe(guard.launchToken.length);
+
+    expect(guard.redeemToken(second).ok).toBe(true);
+    expect(guard.redeemToken(second)).toEqual({ ok: false, reason: 'spent' });
+    // Burning the second spent neither the first nor the third.
+    expect(guard.tokenSpent).toBe(false);
+    expect(guard.redeemToken(third).ok).toBe(true);
+    expect(guard.redeemToken(guard.launchToken).ok).toBe(true);
+    expect(guard.tokenSpent).toBe(true);
+    expect(guard.redeemToken(guard.launchToken)).toEqual({ ok: false, reason: 'spent' });
+    expect(guard.redeemToken(third)).toEqual({ ok: false, reason: 'spent' });
+  });
+
+  it('gives every token its own validity window', async () => {
+    const clock = { now: 1_000 };
+    const guard = await guardAt(clock, { launchTokenTtlMs: 5_000 });
+    clock.now += 4_000;
+    const late = guard.mintLaunchToken();
+    clock.now += 1_001;
+    expect(guard.redeemToken(guard.launchToken)).toEqual({ ok: false, reason: 'expired' });
+    expect(guard.tokenSpent).toBe(true);
+    expect(guard.redeemToken(late).ok).toBe(true);
+  });
+
+  it('drops expired tokens on the next redeem', async () => {
+    const clock = { now: 1_000 };
+    const guard = await guardAt(clock, { launchTokenTtlMs: 5_000 });
+    const early = guard.mintLaunchToken();
+    clock.now += 5_001;
+    const fresh = guard.mintLaunchToken();
+    expect(guard.redeemToken(fresh).ok).toBe(true);
+    // The redeem of `fresh` swept the expired ones out.
+    expect(guard.tokenSpent).toBe(true);
+    expect(guard.redeemToken(early)).toEqual({ ok: false, reason: 'spent' });
+  });
+
+  it('holds at most eight live tokens, dropping the oldest', async () => {
+    const clock = { now: 1_000 };
+    const guard = await guardAt(clock);
+    expect(MAX_LIVE_LAUNCH_TOKENS).toBe(8);
+    const minted: string[] = [];
+    // The first token plus seven more fills the set; the eighth mint drops it.
+    for (let i = 0; i < MAX_LIVE_LAUNCH_TOKENS; i += 1) minted.push(guard.mintLaunchToken());
+    expect(guard.tokenSpent).toBe(true);
+    expect(guard.redeemToken(guard.launchToken)).toEqual({ ok: false, reason: 'spent' });
+    for (const token of minted) expect(guard.redeemToken(token).ok).toBe(true);
+  });
+
+  it('refuses to mint once cleared, and cleared tokens are spent', async () => {
+    const clock = { now: 1_000 };
+    const guard = await guardAt(clock);
+    const second = guard.mintLaunchToken();
+    guard.clear();
+    expect(guard.tokenSpent).toBe(true);
+    expect(guard.redeemToken(second)).toEqual({ ok: false, reason: 'spent' });
+    expect(() => guard.mintLaunchToken()).toThrow(/closed/);
   });
 });
 
