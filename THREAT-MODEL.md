@@ -256,6 +256,11 @@ A2 to an attacker.
   is not written to disk cache.
 - The token has a short validity window (`launchTokenTtlMs`, default 120 s) after
   which it is refused even if unused.
+- A bridge may issue more than one token (`Bridge.launchUrl()`), each minted by
+  the host on its own decision and never on a request from the browser. Every
+  token is single-use with its own validity window; a presentation is compared
+  against each live token in constant time and burns only the one it matches;
+  at most eight are live, and minting a ninth drops the oldest.
 - The token is never logged: it is redacted in every diagnostic path, and the
   client strips it from the URL it retains and never re-sends it.
 

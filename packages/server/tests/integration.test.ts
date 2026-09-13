@@ -86,6 +86,24 @@ describe('bootstrap', () => {
     expect(await second.response.text()).toBe('');
   });
 
+  it('mints a fresh single-use address on launchUrl, leaving url unchanged', async () => {
+    const bridge = await demoBridge();
+    const url = bridge.url;
+    const fresh = bridge.launchUrl();
+    const another = bridge.launchUrl();
+    expect(bridge.url).toBe(url);
+    expect(fresh.startsWith(`${bridge.origin}/?bt=`)).toBe(true);
+    expect(new Set([url, fresh, another]).size).toBe(3);
+
+    const first = await bootstrap(fresh);
+    expect(first.response.status).toBe(303);
+    expect(first.cookie).toContain(`${SESSION_COOKIE_NAME}=`);
+    expect((await bootstrap(fresh)).response.status).toBe(403);
+    // The others are untouched.
+    expect((await bootstrap(another)).response.status).toBe(303);
+    expect((await bootstrap(url)).response.status).toBe(303);
+  });
+
   it('serves the index only to an authenticated caller', async () => {
     const bridge = await startBridge({ index: { body: '<h1>app</h1>' } });
     const { cookie } = await bootstrap(bridge.url);

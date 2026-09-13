@@ -72,6 +72,15 @@ host process deliberately launched.
 | Frame flooding, memory exhaustion | Per-stream credit windows, bounded replay buffers, a capped socket write buffer, and a hard frame-size limit checked before any allocation |
 | Slowloris on the HTTP surface | Header-block cap and a handshake deadline |
 
+**Launch addresses.** An address is single-use; a bridge may issue more than
+one, each minted by the host on its own decision, never on a request from the
+browser. `bridge.url` carries the token minted at start; `bridge.launchUrl()`
+mints another, valid for `launchTokenTtlMs` and burnt on first use, with at most
+eight live at once (a ninth drops the oldest). A host that mints an address
+because a page asked for one has turned a session into a supply of credentials:
+decide in the host, and hand the address only to a person or a process you
+already trust.
+
 **What is explicitly *not* defended** (see `THREAT-MODEL.md` §8):
 
 - **A same-user local process.** Anything running as the user can read the
