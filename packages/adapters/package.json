@@ -1,6 +1,6 @@
 {
   "name": "@brobridgejs/adapters",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "type": "module",
   "description": "brobridge adapters for birpc, oRPC and tRPC",
   "license": "MIT",
