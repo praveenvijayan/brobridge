@@ -36,6 +36,7 @@ export {
   MAX_LIVE_LAUNCH_TOKENS,
   SESSION_COOKIE_ATTRIBUTES,
   SESSION_COOKIE_NAME,
+  sessionCookieName,
 } from './auth.js';
 export type { BridgeSession } from './manager.js';
 export type { BridgeLogger, BridgeOptions, IndexDocument } from './options.js';

@@ -50,7 +50,7 @@ document is the product.
 | --- | --- | --- | --- |
 | A1 | The host application's exposed capability surface (services registered via `expose()`, stream routes) | This is the real target; brobridge is only the door | Arbitrary use of whatever the host exposed: file reads, command execution, data exfiltration |
 | A2 | The one-time launch token (`?bt=…`) | Bearer credential that mints a session | Full A1 access for the holder |
-| A3 | The session cookie (`bb_session`) | Bearer credential for every later request | Full A1 access for the holder |
+| A3 | The session cookie (`bb_session_<port>`) | Bearer credential for every later request | Full A1 access for the holder |
 | A4 | The per-instance HMAC key | Signs A3 | Ability to forge unlimited valid sessions |
 | A5 | The `sessionId` used for resume | Names a resumable session and its replay buffers | Access to replayed stream content if it were accepted without A3 |
 | A6 | Stream payload in flight and in replay buffers | May contain terminal output, file contents, secrets | Disclosure of application data |
@@ -308,6 +308,14 @@ exactly as an absent one. Session identity inside the MAC includes the bound
 authority, so a cookie minted by a bridge on another port fails verification
 here.
 
+**Availability.** The MAC stops a foreign cookie from *authenticating*; it
+does not stop one from *evicting*. Under one shared name, every bridge on the
+host overwrote the cookie of every other: two bridges open in one browser
+each refused the other's tab on its next reload. The cookie is therefore
+named for the bound port, `bb_session_<port>`, so each bridge on `127.0.0.1`
+has a cookie of its own. A hostile writer can still set a cookie under any
+bridge's name, which verifies no better than before; that residual is below.
+
 The residual effect — a hostile local writer can *overwrite* the legitimate
 cookie and break the user's session — is a denial of service against a local
 application by a process that already runs locally. See §8.1.
@@ -496,7 +504,7 @@ re-checked against this table.
 3. The first request presenting a valid, unburned, unexpired token — and only
    after passing the fence — burns it atomically, mints a session, and answers
    `303 See Other` with `Location: /`,
-   `Set-Cookie: bb_session=<value>; HttpOnly; SameSite=Strict; Path=/`,
+   `Set-Cookie: bb_session_<port>=<value>; HttpOnly; SameSite=Strict; Path=/`,
    `Referrer-Policy: no-referrer` and `Cache-Control: no-store`.
 4. Any later presentation of that token is refused `403`.
 

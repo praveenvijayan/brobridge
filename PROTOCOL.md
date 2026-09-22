@@ -396,12 +396,12 @@ package's responsibility; stage 3 is protocol and is core's.
      |---------------------------------------------------->|   burn token,
      |                                                     |   mint session cookie
      |  <-- 303 See Other, Location: /                      |
-     |      Set-Cookie: bb_session=<mac>; HttpOnly;         |
+     |      Set-Cookie: bb_session_<port>=<mac>; HttpOnly;  |
      |        SameSite=Strict; Path=/                       |
      |<----------------------------------------------------|
      |                                                     |
      |  (2) GET /ws  Upgrade: websocket                     |
-     |      Cookie: bb_session=<mac>                        |
+     |      Cookie: bb_session_<port>=<mac>                 |
      |      Origin: http://127.0.0.1:<port>                 |
      |---------------------------------------------------->|   trust fence:
      |                                                     |   Host, Origin,

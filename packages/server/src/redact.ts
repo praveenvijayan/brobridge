@@ -11,12 +11,12 @@ const REDACTED = '[redacted]';
 
 const TOKEN_IN_URL = new RegExp(`([?&]${LAUNCH_TOKEN_PARAM}=)[^&\\s"']+`, 'gi');
 const COOKIE_HEADER = /\b(set-cookie|cookie)\s*:\s*[^\n\r]*/gi;
-const SESSION_COOKIE = /\bbb_session=[^;\s]+/gi;
+const SESSION_COOKIE = /\b(bb_session(?:_\d+)?)=[^;\s]+/gi;
 
 /** Replace launch tokens and cookie material in `text` with a marker. */
 export function redact(text: string): string {
   return text
     .replace(TOKEN_IN_URL, `$1${REDACTED}`)
     .replace(COOKIE_HEADER, (match) => `${match.slice(0, match.indexOf(':') + 1)} ${REDACTED}`)
-    .replace(SESSION_COOKIE, `bb_session=${REDACTED}`);
+    .replace(SESSION_COOKIE, `$1=${REDACTED}`);
 }

@@ -12,7 +12,7 @@ import WebSocket from 'ws';
 
 /** What the bootstrap request yielded. */
 export interface Bootstrap {
-  /** The `bb_session` cookie, ready for a `Cookie` header. */
+  /** The `bb_session_<port>` cookie, ready for a `Cookie` header. */
   readonly cookie: string;
   /** The redirect target. */
   readonly location: string | null;
