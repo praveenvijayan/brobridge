@@ -13,7 +13,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { createBridge } from '../src/index.js';
 import type { Bridge } from '../src/index.js';
-import { SESSION_COOKIE_NAME } from '../src/auth.js';
+import { sessionCookieName } from '../src/auth.js';
 import { RPC_CONTENT_TYPE } from '../src/rpc.js';
 import {
   args,
@@ -74,7 +74,7 @@ describe('bootstrap', () => {
     expect(first.response.headers.get('referrer-policy')).toBe('no-referrer');
     expect(first.response.headers.get('cache-control')).toBe('no-store');
     const setCookie = first.response.headers.get('set-cookie') ?? '';
-    expect(setCookie).toContain(`${SESSION_COOKIE_NAME}=`);
+    expect(setCookie).toContain(`${sessionCookieName(bridge.authority)}=`);
     expect(setCookie).toContain('HttpOnly');
     expect(setCookie).toContain('SameSite=Strict');
     expect(setCookie).toContain('Path=/');
@@ -97,11 +97,27 @@ describe('bootstrap', () => {
 
     const first = await bootstrap(fresh);
     expect(first.response.status).toBe(303);
-    expect(first.cookie).toContain(`${SESSION_COOKIE_NAME}=`);
+    expect(first.cookie).toContain(`${sessionCookieName(bridge.authority)}=`);
     expect((await bootstrap(fresh)).response.status).toBe(403);
     // The others are untouched.
     expect((await bootstrap(another)).response.status).toBe(303);
     expect((await bootstrap(url)).response.status).toBe(303);
+  });
+
+  it('keeps a session when a bridge on another port sets its cookie (§5.8)', async () => {
+    // A browser sends every 127.0.0.1 cookie to every port. Under one shared
+    // name the second bootstrap evicted the first, and the first bridge's tab
+    // was refused on its next reload.
+    const one = await startBridge({ index: { body: '<h1>one</h1>' } });
+    const two = await startBridge({ index: { body: '<h1>two</h1>' } });
+    const jar = [(await bootstrap(one.url)).cookie, (await bootstrap(two.url)).cookie].join('; ');
+
+    const first = await fetch(`${one.origin}/`, { headers: { cookie: jar } });
+    expect(first.status).toBe(200);
+    expect(await first.text()).toBe('<h1>one</h1>');
+    const second = await fetch(`${two.origin}/`, { headers: { cookie: jar } });
+    expect(second.status).toBe(200);
+    expect(await second.text()).toBe('<h1>two</h1>');
   });
 
   it('serves the index only to an authenticated caller', async () => {

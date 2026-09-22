@@ -16,6 +16,7 @@ import {
   SESSION_COOKIE_ATTRIBUTES,
   SESSION_COOKIE_NAME,
   readCookie,
+  sessionCookieName,
   timingSafeEqual,
 } from '../src/auth.js';
 
@@ -167,7 +168,8 @@ describe('the session cookie', () => {
     if (!redeemed.ok) return;
 
     const setCookie = await guard.cookieFor(redeemed.sessionId);
-    expect(setCookie.startsWith(`${SESSION_COOKIE_NAME}=`)).toBe(true);
+    expect(guard.cookieName).toBe(`${SESSION_COOKIE_NAME}_7777`);
+    expect(setCookie.startsWith(`${guard.cookieName}=`)).toBe(true);
     expect(setCookie.endsWith(`; ${SESSION_COOKIE_ATTRIBUTES}`)).toBe(true);
     expect(SESSION_COOKIE_ATTRIBUTES).toBe('HttpOnly; SameSite=Strict; Path=/');
     // Deliberately not `Secure`: the bootstrap URL is plain http on loopback.
@@ -193,7 +195,8 @@ describe('the session cookie', () => {
     const redeemed = guard.redeemToken(guard.launchToken);
     if (!redeemed.ok) throw new Error('token should have redeemed');
     const cookie = cookieHeader(await guard.cookieFor(redeemed.sessionId));
-    const [id, issuedAt, mac] = (readCookie(cookie, SESSION_COOKIE_NAME) as string).split('.') as [
+    const name = guard.cookieName;
+    const [id, issuedAt, mac] = (readCookie(cookie, name) as string).split('.') as [
       string,
       string,
       string,
@@ -205,13 +208,13 @@ describe('the session cookie', () => {
       `${text.startsWith('A') ? 'B' : 'A'}${text.slice(1)}`;
 
     for (const forged of [
-      `${SESSION_COOKIE_NAME}=${id}.${issuedAt}.${swap(mac)}`,
-      `${SESSION_COOKIE_NAME}=${swap(id)}.${issuedAt}.${mac}`,
-      `${SESSION_COOKIE_NAME}=${id}.${String(Number(issuedAt) + 1)}.${mac}`,
-      `${SESSION_COOKIE_NAME}=${id}.${issuedAt}`,
-      `${SESSION_COOKIE_NAME}=${id}.${issuedAt}.${mac}.extra`,
-      `${SESSION_COOKIE_NAME}=`,
-      `${SESSION_COOKIE_NAME}=....`,
+      `${name}=${id}.${issuedAt}.${swap(mac)}`,
+      `${name}=${swap(id)}.${issuedAt}.${mac}`,
+      `${name}=${id}.${String(Number(issuedAt) + 1)}.${mac}`,
+      `${name}=${id}.${issuedAt}`,
+      `${name}=${id}.${issuedAt}.${mac}.extra`,
+      `${name}=`,
+      `${name}=....`,
     ]) {
       const outcome = await guard.verifyCookie(forged);
       expect(outcome.ok, forged).toBe(false);
@@ -230,7 +233,39 @@ describe('the session cookie', () => {
     if (!redeemed.ok) throw new Error('token should have redeemed');
     const foreign = cookieHeader(await there.cookieFor(redeemed.sessionId));
 
-    await expect(here.verifyCookie(foreign)).resolves.toEqual({ ok: false, reason: 'mismatch' });
+    // Under its own name it is not this bridge's cookie at all.
+    await expect(here.verifyCookie(foreign)).resolves.toEqual({ ok: false, reason: 'absent' });
+    // Planted under this bridge's name, the MAC still refuses it.
+    const planted = `${here.cookieName}=${readCookie(foreign, there.cookieName) as string}`;
+    await expect(here.verifyCookie(planted)).resolves.toEqual({ ok: false, reason: 'mismatch' });
+  });
+
+  it('names the cookie for the port, so bridges on one host keep their own (§5.8)', async () => {
+    expect(sessionCookieName('127.0.0.1:7777')).toBe('bb_session_7777');
+    expect(sessionCookieName('[::1]:53580')).toBe('bb_session_53580');
+    expect(sessionCookieName('localhost:80')).toBe('bb_session_80');
+
+    // One browser jar for 127.0.0.1 holds both cookies and sends both to
+    // both bridges. Neither evicts the other, and each verifies its own.
+    const clock = { now: 1_000 };
+    const here = await guardAt(clock, { authority: '127.0.0.1:7777' });
+    const there = await guardAt(clock, { authority: '127.0.0.1:7778' });
+    const hereSession = here.redeemToken(here.launchToken);
+    const thereSession = there.redeemToken(there.launchToken);
+    if (!hereSession.ok || !thereSession.ok) throw new Error('tokens should have redeemed');
+    const jar = [
+      cookieHeader(await here.cookieFor(hereSession.sessionId)),
+      cookieHeader(await there.cookieFor(thereSession.sessionId)),
+    ].join('; ');
+
+    await expect(here.verifyCookie(jar)).resolves.toEqual({
+      ok: true,
+      sessionId: hereSession.sessionId,
+    });
+    await expect(there.verifyCookie(jar)).resolves.toEqual({
+      ok: true,
+      sessionId: thereSession.sessionId,
+    });
   });
 
   it('refuses a cookie whose session was revoked, and one that aged out', async () => {

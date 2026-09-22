@@ -11,8 +11,26 @@
  * @see THREAT-MODEL.md §7 "Authentication, precisely"
  */
 
-/** The cookie the bridge mints and requires. */
+/**
+ * The prefix of the cookie the bridge mints and requires. The cookie itself
+ * is named for the bound port, see {@link sessionCookieName}.
+ */
 export const SESSION_COOKIE_NAME = 'bb_session';
+
+/**
+ * The name of the session cookie for a bound authority: `bb_session_<port>`.
+ *
+ * A browser keeps one cookie jar per host with no regard for the port
+ * (`THREAT-MODEL.md` §5.8). Under one shared name, every bridge on
+ * `127.0.0.1` overwrote the cookie of every other, and a tab of the bridge
+ * that bootstrapped first was refused on its next reload. The MAC already
+ * made the other bridge's cookie worthless here; the port in the name keeps
+ * it from evicting this one.
+ */
+export function sessionCookieName(authority: string): string {
+  const port = /:(\d{1,5})$/.exec(authority)?.[1];
+  return port === undefined ? SESSION_COOKIE_NAME : `${SESSION_COOKIE_NAME}_${port}`;
+}
 
 /**
  * The cookie attributes, exactly as `THREAT-MODEL.md` §7.1 specifies.
@@ -118,6 +136,7 @@ interface FailureWindow {
  */
 export class AuthGuard {
   readonly #authority: string;
+  readonly #cookieName: string;
   readonly #launchTokenTtlMs: number;
   readonly #sessionCookieTtlMs: number;
   readonly #failureWindowMs: number;
@@ -138,6 +157,7 @@ export class AuthGuard {
 
   private constructor(options: AuthGuardOptions, key: SigningKey, token: Uint8Array) {
     this.#authority = options.authority;
+    this.#cookieName = sessionCookieName(options.authority);
     this.#launchTokenTtlMs = options.launchTokenTtlMs;
     this.#sessionCookieTtlMs = options.sessionCookieTtlMs;
     this.#failureWindowMs = options.authFailureWindowMs;
@@ -164,6 +184,11 @@ export class AuthGuard {
     );
     keyMaterial.fill(0);
     return new AuthGuard(options, key, randomBytes(TOKEN_BYTES));
+  }
+
+  /** The name of the cookie this guard mints and reads. */
+  get cookieName(): string {
+    return this.#cookieName;
   }
 
   /** The first launch token, for the `?bt=` bootstrap URL. Never log this. */
@@ -250,7 +275,7 @@ export class AuthGuard {
    * tests and local diagnostics and never reaches the wire.
    */
   async verifyCookie(cookieHeader: string | undefined): Promise<AuthOutcome> {
-    const value = readCookie(cookieHeader, SESSION_COOKIE_NAME);
+    const value = readCookie(cookieHeader, this.#cookieName);
     if (value === undefined) return fail('absent');
 
     const parts = value.split('.');
@@ -282,7 +307,7 @@ export class AuthGuard {
     const issuedAt = this.#sessions.get(sessionId) ?? this.#now();
     const mac = await this.#sign(sessionId, issuedAt);
     const value = `${sessionId}.${String(issuedAt)}.${base64url(mac)}`;
-    return `${SESSION_COOKIE_NAME}=${value}; ${SESSION_COOKIE_ATTRIBUTES}`;
+    return `${this.#cookieName}=${value}; ${SESSION_COOKIE_ATTRIBUTES}`;
   }
 
   /** Whether `remote` has spent its failure budget for the current window. */
