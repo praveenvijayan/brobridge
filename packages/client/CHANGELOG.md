@@ -1,5 +1,11 @@
 # @brobridgejs/client
 
+## 0.2.3
+
+### Patch Changes
+
+- @brobridgejs/core@0.2.3
+
 ## 0.2.2
 
 ### Patch Changes
